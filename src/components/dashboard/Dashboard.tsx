@@ -180,9 +180,13 @@ export function Dashboard() {
                     <Database className="w-4 h-4 mr-2" />
                     Browse Historical Data
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button
+                    className="w-full justify-start"
+                    variant="outline"
+                    onClick={() => (window.location.href = "/notebook")}
+                  >
                     <Code className="w-4 h-4 mr-2" />
-                    Create New Strategy
+                    Open Notebook IDE
                   </Button>
                   <Button className="w-full justify-start" variant="outline">
                     <Play className="w-4 h-4 mr-2" />

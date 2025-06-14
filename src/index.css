@@ -172,4 +172,102 @@
     @apply bg-quant-success/10 border border-quant-success/30 rounded-xl p-4;
     @apply font-mono text-sm text-quant-success;
   }
+
+  /* IDE Layout Styles */
+  .ide-layout {
+    @apply h-screen flex flex-col bg-quant-bg;
+  }
+
+  .ide-header {
+    @apply h-12 bg-quant-bg-secondary border-b border-quant-border flex items-center px-4;
+  }
+
+  .ide-main {
+    @apply flex-1 flex overflow-hidden;
+  }
+
+  .ide-sidebar {
+    @apply w-64 bg-quant-bg-secondary border-r border-quant-border flex flex-col;
+  }
+
+  .ide-content {
+    @apply flex-1 flex flex-col;
+  }
+
+  .ide-terminal {
+    @apply h-64 bg-quant-bg-tertiary border-t border-quant-border;
+  }
+
+  /* Monaco Editor Overrides */
+  .monaco-editor {
+    @apply rounded-xl;
+  }
+
+  .monaco-editor .margin {
+    background-color: #1e1e1e !important;
+  }
+
+  .monaco-editor .monaco-editor-background {
+    background-color: #1e1e1e !important;
+  }
+
+  /* Sports Betting Specific Styles */
+  .bet-indicator {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  .bet-indicator.positive {
+    @apply bg-quant-success/20 text-quant-success;
+  }
+
+  .bet-indicator.negative {
+    @apply bg-quant-error/20 text-quant-error;
+  }
+
+  .bet-indicator.neutral {
+    @apply bg-quant-text-muted/20 text-quant-text-muted;
+  }
+
+  /* AI Assistant Styles */
+  .ai-chat-bubble {
+    @apply absolute -right-2 -top-2 w-8 h-8 bg-quant-accent rounded-full flex items-center justify-center shadow-glow cursor-pointer transition-all duration-200 hover:scale-110;
+  }
+
+  .ai-sidebar {
+    @apply w-80 bg-quant-bg-secondary border-l border-quant-border flex flex-col;
+  }
+
+  .ai-message {
+    @apply p-3 rounded-xl max-w-[85%] text-sm;
+  }
+
+  .ai-message.user {
+    @apply bg-quant-accent text-quant-bg ml-auto;
+  }
+
+  .ai-message.assistant {
+    @apply bg-quant-bg-tertiary text-quant-text border border-quant-border;
+  }
+
+  /* File Explorer Styles */
+  .file-tree-item {
+    @apply flex items-center px-3 py-2 text-sm text-quant-text hover:bg-quant-bg-tertiary cursor-pointer rounded-lg mx-2;
+  }
+
+  .file-tree-item.active {
+    @apply bg-quant-accent/10 text-quant-accent border-l-2 border-quant-accent;
+  }
+
+  /* Terminal Styles */
+  .terminal-tab {
+    @apply px-4 py-2 text-sm font-medium text-quant-text-muted hover:text-quant-text cursor-pointer border-b-2 border-transparent hover:border-quant-accent/50;
+  }
+
+  .terminal-tab.active {
+    @apply text-quant-accent border-quant-accent;
+  }
+
+  .terminal-content {
+    @apply p-4 font-mono text-sm text-quant-text bg-quant-bg-tertiary overflow-auto;
+  }
 }
