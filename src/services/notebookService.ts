@@ -204,8 +204,8 @@ win_prob = 0.5  # 50% chance
 bankroll = 1000
 
 bet_size = kelly_criterion(odds, win_prob, bankroll)
-print(f"Recommended bet size: ${bet_size:.2f}")
-print(f"That's {bet_size/bankroll:.1%} of your bankroll")`,
+print(f"Recommended bet size: ${bet_size}")
+print(f"That's {bet_size/bankroll} of your bankroll")`,
         explanation: "Implemented Kelly Criterion for optimal bet sizing",
       };
     }
@@ -240,13 +240,14 @@ closing = 1.8   # Moved to -125 at close
 my_bet = 2.1    # I got +110
 
 clv = closing_line_value(opening, closing, my_bet)
-print(f"Closing Line Value: {clv:.2%}")
+print(f"Closing Line Value: ${clv}")
 
 if clv > 0:
     print("✅ Positive CLV - You beat the closing line!")
 else:
     print("❌ Negative CLV - Market moved against you")`,
-        explanation: "Created a Closing Line Value calculator to measure bet quality",
+        explanation:
+          "Created a Closing Line Value calculator to measure bet quality",
       };
     }
 
