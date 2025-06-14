@@ -1,76 +1,175 @@
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/600.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+
 @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
+@tailwind components;
+@tailwind utilities;
 
-  @layer base {
-    :root {
-      --background: 0 0% 100%;
-      --foreground: 222.2 84% 4.9%;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-      --card: 0 0% 100%;
-      --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-      --popover: 0 0% 100%;
-      --popover-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-      --primary: 222.2 47.4% 11.2%;
-      --primary-foreground: 210 40% 98%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-      --secondary: 210 40% 96.1%;
-      --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-      --muted: 210 40% 96.1%;
-      --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-      --accent: 210 40% 96.1%;
-      --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
-      --destructive: 0 84.2% 60.2%;
-      --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-      --border: 214.3 31.8% 91.4%;
-      --input: 214.3 31.8% 91.4%;
-      --ring: 222.2 84% 4.9%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
 
-      --radius: 0.5rem;
-    }
-
-    .dark {
-      --background: 222.2 84% 4.9%;
-      --foreground: 210 40% 98%;
-
-      --card: 222.2 84% 4.9%;
-      --card-foreground: 210 40% 98%;
-
-      --popover: 222.2 84% 4.9%;
-      --popover-foreground: 210 40% 98%;
-
-      --primary: 210 40% 98%;
-      --primary-foreground: 222.2 47.4% 11.2%;
-
-      --secondary: 217.2 32.6% 17.5%;
-      --secondary-foreground: 210 40% 98%;
-
-      --muted: 217.2 32.6% 17.5%;
-      --muted-foreground: 215 20.2% 65.1%;
-
-      --accent: 217.2 32.6% 17.5%;
-      --accent-foreground: 210 40% 98%;
-
-      --destructive: 0 62.8% 30.6%;
-      --destructive-foreground: 210 40% 98%;
-
-      --border: 217.2 32.6% 17.5%;
-      --input: 217.2 32.6% 17.5%;
-      --ring: 212.7 26.8% 83.9%;
-    }
+    --radius: 0.5rem;
   }
 
-  @layer base {
-    * {
-      @apply border-border;
-    }
-    body {
-      @apply bg-background text-foreground;
-    }
+  .dark {
+    /* QuantConnect-inspired dark theme */
+    --background: 210 11% 7%; /* #121212 */
+    --foreground: 240 5% 90%; /* #E4E4E7 */
+
+    --card: 240 4% 10%; /* #1A1A1A */
+    --card-foreground: 240 5% 90%;
+
+    --popover: 240 4% 10%;
+    --popover-foreground: 240 5% 90%;
+
+    --primary: 173 100% 41%; /* #00D4AA - Teal accent */
+    --primary-foreground: 240 11% 7%;
+
+    --secondary: 240 4% 16%; /* #27272A */
+    --secondary-foreground: 240 5% 90%;
+
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 4% 65%; /* #A1A1AA */
+
+    --accent: 173 100% 41%; /* Teal accent */
+    --accent-foreground: 240 11% 7%;
+
+    --destructive: 0 84% 60%; /* #FF4757 */
+    --destructive-foreground: 240 5% 90%;
+
+    --border: 240 4% 16%; /* #27272A */
+    --input: 240 4% 16%;
+    --ring: 173 100% 41%;
+
+    --radius: 0.75rem;
   }
+
+  /* Force dark mode by default */
+  html {
+    @apply dark;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-quant-bg text-quant-text font-sans;
+    font-feature-settings:
+      "liga" 1,
+      "calt" 1;
+  }
+
+  /* Code and monospace elements */
+  code,
+  pre,
+  .font-mono {
+    @apply font-code;
+    font-feature-settings:
+      "liga" 1,
+      "calt" 1;
+  }
+
+  /* Scrollbar styling for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-quant-bg-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-quant-border-light rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-quant-accent/50;
+  }
+
+  /* Selection styling */
+  ::selection {
+    @apply bg-quant-accent/30 text-quant-text;
+  }
+}
+
+@layer components {
+  /* Code cell styling */
+  .code-cell {
+    @apply bg-quant-bg-secondary border border-quant-border rounded-2xl p-4 shadow-code-cell;
+    @apply hover:border-quant-border-light transition-all duration-200;
+  }
+
+  /* Sidebar glow effect */
+  .sidebar-item-active {
+    @apply bg-quant-accent/10 border-l-2 border-quant-accent shadow-glow;
+  }
+
+  /* High-tech button styles */
+  .btn-quant {
+    @apply bg-quant-accent hover:bg-quant-accent/90 text-quant-bg;
+    @apply rounded-2xl px-6 py-3 font-medium shadow-soft;
+    @apply transition-all duration-200 hover:shadow-glow;
+  }
+
+  .btn-quant-secondary {
+    @apply bg-quant-accent-secondary hover:bg-quant-accent-secondary/90 text-white;
+    @apply rounded-2xl px-6 py-3 font-medium shadow-soft;
+    @apply transition-all duration-200 hover:shadow-glow-blue;
+  }
+
+  /* Console/log styling */
+  .console-output {
+    @apply bg-quant-bg-tertiary border border-quant-border rounded-xl p-4;
+    @apply font-mono text-sm text-quant-text-muted;
+  }
+
+  /* Error message styling */
+  .error-message {
+    @apply bg-quant-error/10 border border-quant-error/30 rounded-xl p-4;
+    @apply font-mono text-sm text-quant-error;
+  }
+
+  /* Success message styling */
+  .success-message {
+    @apply bg-quant-success/10 border border-quant-success/30 rounded-xl p-4;
+    @apply font-mono text-sm text-quant-success;
+  }
+}
