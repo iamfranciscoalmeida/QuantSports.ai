@@ -39,14 +39,14 @@ function Home() {
     setShowAuthModal(true);
   };
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-quant-bg">
       {/* Navigation */}
-      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav className="border-b border-quant-border bg-quant-bg/95 backdrop-blur supports-[backdrop-filter]:bg-quant-bg/80">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <BarChart3 className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold text-foreground">
+            <div className="flex items-center space-x-3">
+              <BarChart3 className="h-8 w-8 text-quant-accent" />
+              <span className="text-2xl font-bold text-quant-text font-sans">
                 QuantSports.ai
               </span>
             </div>
@@ -61,38 +61,40 @@ function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="container mx-auto text-center">
-          <Badge variant="secondary" className="mb-4">
-            <Zap className="w-3 h-3 mr-1" />
+          <Badge variant="secondary" className="mb-6">
+            <Zap className="w-3 h-3 mr-2" />
             Cloud-Native Sports Betting Research
           </Badge>
-          <h1 className="text-4xl font-extrabold tracking-tight lg:text-6xl mb-6">
+          <h1 className="text-5xl font-bold tracking-tight lg:text-7xl mb-8 font-sans">
             Backtest Your Betting Strategies
-            <span className="text-primary block">With Historical Data</span>
+            <span className="text-quant-accent block mt-2">
+              With Historical Data
+            </span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-7">
+          <p className="text-xl text-quant-text-muted max-w-4xl mx-auto mb-12 leading-8">
             A code-first platform enabling sports bettors to backtest betting
             strategies against historical odds data through our Python SDK.
             Analyze performance, optimize strategies, and make data-driven
             decisions.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button
               size="lg"
-              className="text-lg px-8 py-3"
+              className="text-lg px-10 py-4 h-14"
               onClick={handleGetStarted}
             >
-              <Code className="w-5 h-5 mr-2" />
+              <Code className="w-5 h-5 mr-3" />
               Start Building Strategies
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               size="lg"
-              className="text-lg px-8 py-3"
+              className="text-lg px-10 py-4 h-14"
               onClick={handleGetStarted}
             >
-              <Database className="w-5 h-5 mr-2" />
+              <Database className="w-5 h-5 mr-3" />
               Explore Historical Data
             </Button>
           </div>
@@ -100,13 +102,13 @@ function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/50">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-quant-bg-secondary/50">
         <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-semibold tracking-tight mb-4">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-bold tracking-tight mb-6 text-quant-text">
               Everything You Need for Strategy Development
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-quant-text-muted max-w-3xl mx-auto leading-8">
               From historical data ingestion to vectorized backtesting, our
               platform provides all the tools for serious sports betting
               research.
@@ -114,116 +116,200 @@ function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="bg-background">
+            <Card className="bg-quant-bg-secondary border-quant-border hover:border-quant-accent/30 transition-all duration-300">
               <CardHeader>
-                <Database className="w-10 h-10 text-primary mb-2" />
-                <CardTitle>Historical Odds Database</CardTitle>
-                <CardDescription>
+                <Database className="w-12 h-12 text-quant-accent mb-3" />
+                <CardTitle className="text-quant-text text-xl">
+                  Historical Odds Database
+                </CardTitle>
+                <CardDescription className="text-quant-text-muted">
                   Access comprehensive historical odds and results data with
                   advanced filtering by sport, league, and team.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-2">
-                  <li>• Multi-sport coverage</li>
-                  <li>• Real-time data ingestion</li>
-                  <li>• Advanced filtering options</li>
-                  <li>• Data visualization tools</li>
+                <ul className="text-sm text-quant-text-muted space-y-3">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>
+                    Multi-sport coverage
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>
+                    Real-time data ingestion
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>
+                    Advanced filtering options
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>
+                    Data visualization tools
+                  </li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="bg-background">
+            <Card className="bg-quant-bg-secondary border-quant-border hover:border-quant-accent/30 transition-all duration-300">
               <CardHeader>
-                <Zap className="w-10 h-10 text-primary mb-2" />
-                <CardTitle>Vectorized Backtesting</CardTitle>
-                <CardDescription>
+                <Zap className="w-12 h-12 text-quant-accent mb-3" />
+                <CardTitle className="text-quant-text text-xl">
+                  Vectorized Backtesting
+                </CardTitle>
+                <CardDescription className="text-quant-text-muted">
                   High-performance backtesting engine that evaluates strategy
                   performance across historical periods.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-2">
-                  <li>• Lightning-fast execution</li>
-                  <li>• Custom time periods</li>
-                  <li>• Multiple market testing</li>
-                  <li>• Performance metrics</li>
+                <ul className="text-sm text-quant-text-muted space-y-3">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>
+                    Lightning-fast execution
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>
+                    Custom time periods
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>
+                    Multiple market testing
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>
+                    Performance metrics
+                  </li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="bg-background">
+            <Card className="bg-quant-bg-secondary border-quant-border hover:border-quant-accent/30 transition-all duration-300">
               <CardHeader>
-                <Code className="w-10 h-10 text-primary mb-2" />
-                <CardTitle>Python SDK</CardTitle>
-                <CardDescription>
+                <Code className="w-12 h-12 text-quant-accent mb-3" />
+                <CardTitle className="text-quant-text text-xl">
+                  Python SDK
+                </CardTitle>
+                <CardDescription className="text-quant-text-muted">
                   Lightweight SDK providing programmatic access to all platform
                   functionality with simple, intuitive APIs.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-2">
-                  <li>• Easy installation</li>
-                  <li>• Comprehensive documentation</li>
-                  <li>• Strategy templates</li>
-                  <li>• Code examples</li>
+                <ul className="text-sm text-quant-text-muted space-y-3">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Easy installation
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Comprehensive documentation
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Strategy templates
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Code examples
+                  </li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="bg-background">
+            <Card className="bg-quant-bg-secondary border-quant-border hover:border-quant-accent/30 transition-all duration-300">
               <CardHeader>
-                <Target className="w-10 h-10 text-primary mb-2" />
-                <CardTitle>Strategy Templates</CardTitle>
-                <CardDescription>
+                <Target className="w-12 h-12 text-quant-accent mb-3" />
+                <CardTitle className="text-quant-text text-xl">
+                  Strategy Templates
+                </CardTitle>
+                <CardDescription className="text-quant-text-muted">
                   Pre-built strategy templates that you can customize with your
                   own entry/exit rules and risk parameters.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-2">
-                  <li>• Ready-to-use templates</li>
-                  <li>• Customizable parameters</li>
-                  <li>• Risk management tools</li>
-                  <li>• Best practices included</li>
+                <ul className="text-sm text-quant-text-muted space-y-3">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Ready-to-use templates
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Customizable parameters
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Risk management tools
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Best practices included
+                  </li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="bg-background">
+            <Card className="bg-quant-bg-secondary border-quant-border hover:border-quant-accent/30 transition-all duration-300">
               <CardHeader>
-                <LineChart className="w-10 h-10 text-primary mb-2" />
-                <CardTitle>Performance Analytics</CardTitle>
-                <CardDescription>
+                <LineChart className="w-12 h-12 text-quant-accent mb-3" />
+                <CardTitle className="text-quant-text text-xl">
+                  Performance Analytics
+                </CardTitle>
+                <CardDescription className="text-quant-text-muted">
                   Comprehensive performance metrics including ROI, win rates,
                   drawdowns, and detailed visualizations.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-2">
-                  <li>• ROI & profit tracking</li>
-                  <li>• Win rate analysis</li>
-                  <li>• Drawdown monitoring</li>
-                  <li>• Interactive charts</li>
+                <ul className="text-sm text-quant-text-muted space-y-3">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    ROI & profit tracking
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Win rate analysis
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Drawdown monitoring
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Interactive charts
+                  </li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="bg-background">
+            <Card className="bg-quant-bg-secondary border-quant-border hover:border-quant-accent/30 transition-all duration-300">
               <CardHeader>
-                <Brain className="w-10 h-10 text-primary mb-2" />
-                <CardTitle>Clean UI & Code Focus</CardTitle>
-                <CardDescription>
+                <Brain className="w-12 h-12 text-quant-accent mb-3" />
+                <CardTitle className="text-quant-text text-xl">
+                  Clean UI & Code Focus
+                </CardTitle>
+                <CardDescription className="text-quant-text-muted">
                   Minimal, clean interface focused on data presentation and code
                   execution without unnecessary complexity.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-2">
-                  <li>• Intuitive interface</li>
-                  <li>• Code-first approach</li>
-                  <li>• Data-focused design</li>
-                  <li>• Streamlined workflow</li>
+                <ul className="text-sm text-quant-text-muted space-y-3">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Intuitive interface
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Code-first approach
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Data-focused design
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-quant-accent rounded-full mr-3"></span>{" "}
+                    Streamlined workflow
+                  </li>
                 </ul>
               </CardContent>
             </Card>
