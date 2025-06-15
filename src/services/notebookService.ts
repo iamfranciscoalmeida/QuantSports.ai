@@ -10,7 +10,12 @@ import {
   BacktestSummary,
   BetLogEntry,
   PnLPoint,
+  PublishedNotebook,
+  GalleryFilters,
+  ForkNotebookRequest,
+  Notebook,
 } from "@/types/notebook";
+import { supabase } from "@/lib/supabase";
 
 // Mock Python execution service (replace with actual backend)
 export class NotebookService {
@@ -465,5 +470,274 @@ print(f"Context cells: {len(context)}")
     def update_bankroll(self, pnl):
         """Update bankroll after bet settlement"""
         self.bankroll += pnl`;
+  }
+
+  // Gallery API methods
+  static async getPublishedNotebooks(
+    filters: GalleryFilters = {},
+  ): Promise<PublishedNotebook[]> {
+    let query = supabase
+      .from("published_notebooks")
+      .select(
+        `
+        *,
+        users!published_notebooks_author_id_fkey(display_name)
+      `,
+      )
+      .eq("is_public", true);
+
+    // Apply filters
+    if (filters.sport) {
+      query = query.eq("sport", filters.sport);
+    }
+    if (filters.min_roi !== undefined) {
+      query = query.gte("roi", filters.min_roi);
+    }
+    if (filters.max_roi !== undefined) {
+      query = query.lte("roi", filters.max_roi);
+    }
+    if (filters.tags && filters.tags.length > 0) {
+      query = query.overlaps("tags", filters.tags);
+    }
+    if (filters.search) {
+      query = query.or(
+        `title.ilike.%${filters.search}%,summary.ilike.%${filters.search}%`,
+      );
+    }
+
+    // Apply sorting
+    const sortBy = filters.sort_by || "created_at";
+    const sortOrder = filters.sort_order || "desc";
+    query = query.order(sortBy, { ascending: sortOrder === "asc" });
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw new Error(`Failed to fetch published notebooks: ${error.message}`);
+    }
+
+    return (data || []).map((item) => ({
+      ...item,
+      author_name: item.users?.display_name || "Anonymous",
+    }));
+  }
+
+  static async getPublishedNotebook(
+    slug: string,
+  ): Promise<PublishedNotebook | null> {
+    const { data, error } = await supabase
+      .from("published_notebooks")
+      .select(
+        `
+        *,
+        users!published_notebooks_author_id_fkey(display_name)
+      `,
+      )
+      .eq("slug", slug)
+      .eq("is_public", true)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        return null; // Not found
+      }
+      throw new Error(`Failed to fetch published notebook: ${error.message}`);
+    }
+
+    return {
+      ...data,
+      author_name: data.users?.display_name || "Anonymous",
+    };
+  }
+
+  static async publishNotebook(
+    notebook: Notebook,
+    publishData: {
+      sport: string;
+      tags: string[];
+      summary?: string;
+      performance_data?: any;
+    },
+  ): Promise<PublishedNotebook> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error("User must be authenticated to publish notebooks");
+    }
+
+    // Generate slug from title
+    const slug = notebook.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .substring(0, 50);
+
+    // Combine all code from cells
+    const code = notebook.cells
+      .filter((cell) => cell.type === "code")
+      .map((cell) => cell.content)
+      .join("\n\n");
+
+    const publishedNotebook = {
+      title: notebook.title,
+      slug: `${slug}-${Date.now()}`, // Add timestamp to ensure uniqueness
+      author_id: user.id,
+      sport: publishData.sport,
+      tags: publishData.tags,
+      code,
+      summary: publishData.summary,
+      notebook_cells: notebook.cells,
+      performance_data: publishData.performance_data || {},
+      roi: publishData.performance_data?.metrics?.roi || 0,
+      sharpe: publishData.performance_data?.metrics?.sharpe_ratio || 0,
+    };
+
+    const { data, error } = await supabase
+      .from("published_notebooks")
+      .insert(publishedNotebook)
+      .select(
+        `
+        *,
+        users!published_notebooks_author_id_fkey(display_name)
+      `,
+      )
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to publish notebook: ${error.message}`);
+    }
+
+    return {
+      ...data,
+      author_name: data.users?.display_name || "Anonymous",
+    };
+  }
+
+  static async forkNotebook(request: ForkNotebookRequest): Promise<Notebook> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error("User must be authenticated to fork notebooks");
+    }
+
+    // Get the published notebook
+    const publishedNotebook = await this.getPublishedNotebook(
+      request.published_notebook_id,
+    );
+    if (!publishedNotebook) {
+      throw new Error("Published notebook not found");
+    }
+
+    // Increment fork count
+    await supabase
+      .from("published_notebooks")
+      .update({ fork_count: publishedNotebook.fork_count + 1 })
+      .eq("id", publishedNotebook.id);
+
+    // Create new notebook from published notebook
+    const forkedNotebook: Notebook = {
+      id: `notebook-${Date.now()}`,
+      title: request.new_title || `${publishedNotebook.title} (Fork)`,
+      cells: publishedNotebook.notebook_cells,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    return forkedNotebook;
+  }
+
+  static async getSamplePublishedNotebooks(): Promise<PublishedNotebook[]> {
+    // Mock data for development
+    return [
+      {
+        id: "1",
+        title: "NBA Over/Under Value Strategy",
+        slug: "nba-over-under-value-strategy",
+        author_id: "user1",
+        author_name: "@quantace",
+        sport: "basketball",
+        tags: ["nba", "over-under", "value-betting", "kelly"],
+        created_at: "2024-01-15T10:00:00Z",
+        updated_at: "2024-01-15T10:00:00Z",
+        roi: 24.5,
+        sharpe: 1.8,
+        code: "def nba_over_under_strategy():\n    # Strategy implementation\n    pass",
+        summary:
+          "A profitable NBA over/under strategy using advanced statistical models and Kelly criterion for bet sizing.",
+        is_public: true,
+        fork_count: 23,
+        notebook_cells: [],
+        performance_data: {
+          metrics: {
+            roi: 24.5,
+            sharpe_ratio: 1.8,
+            win_rate: 67.3,
+            max_drawdown: 8.2,
+            total_bets: 156,
+          },
+          pnl_curve: [],
+        },
+      },
+      {
+        id: "2",
+        title: "NFL Underdog Kelly Model",
+        slug: "nfl-underdog-kelly-model",
+        author_id: "user2",
+        author_name: "@betbuilder",
+        sport: "football",
+        tags: ["nfl", "underdog", "kelly", "high-volatility"],
+        created_at: "2024-01-10T15:30:00Z",
+        updated_at: "2024-01-10T15:30:00Z",
+        roi: 18.7,
+        sharpe: 1.2,
+        code: "def nfl_underdog_strategy():\n    # Strategy implementation\n    pass",
+        summary:
+          "High-risk, high-reward NFL underdog betting strategy with proper bankroll management.",
+        is_public: true,
+        fork_count: 15,
+        notebook_cells: [],
+        performance_data: {
+          metrics: {
+            roi: 18.7,
+            sharpe_ratio: 1.2,
+            win_rate: 45.2,
+            max_drawdown: 15.3,
+            total_bets: 89,
+          },
+          pnl_curve: [],
+        },
+      },
+      {
+        id: "3",
+        title: "MLB Moneyline Arbitrage",
+        slug: "mlb-moneyline-arbitrage",
+        author_id: "user3",
+        author_name: "@arbmaster",
+        sport: "baseball",
+        tags: ["mlb", "arbitrage", "low-risk", "statistical"],
+        created_at: "2024-01-08T09:15:00Z",
+        updated_at: "2024-01-08T09:15:00Z",
+        roi: 12.3,
+        sharpe: 2.1,
+        code: "def mlb_arbitrage_strategy():\n    # Strategy implementation\n    pass",
+        summary:
+          "Low-risk MLB arbitrage opportunities using statistical analysis and market inefficiencies.",
+        is_public: true,
+        fork_count: 31,
+        notebook_cells: [],
+        performance_data: {
+          metrics: {
+            roi: 12.3,
+            sharpe_ratio: 2.1,
+            win_rate: 78.9,
+            max_drawdown: 3.1,
+            total_bets: 234,
+          },
+          pnl_curve: [],
+        },
+      },
+    ];
   }
 }

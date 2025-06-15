@@ -188,6 +188,14 @@ export function Dashboard() {
                     <Code className="w-4 h-4 mr-2" />
                     Open Notebook IDE
                   </Button>
+                  <Button
+                    className="w-full justify-start"
+                    variant="outline"
+                    onClick={() => (window.location.href = "/gallery")}
+                  >
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Browse Strategy Gallery
+                  </Button>
                   <Button className="w-full justify-start" variant="outline">
                     <Play className="w-4 h-4 mr-2" />
                     Run Backtest

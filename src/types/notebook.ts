@@ -157,3 +157,43 @@ export interface BacktestExecution {
   result?: BacktestResult;
   error?: string;
 }
+
+export interface PublishedNotebook {
+  id: string;
+  title: string;
+  slug: string;
+  author_id: string;
+  author_name?: string;
+  sport: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  roi: number;
+  sharpe: number;
+  code: string;
+  summary?: string;
+  is_public: boolean;
+  fork_count: number;
+  notebook_cells: NotebookCell[];
+  performance_data: {
+    pnl_curve?: PnLPoint[];
+    metrics?: BacktestSummary;
+    chart_preview?: string;
+  };
+}
+
+export interface GalleryFilters {
+  sport?: string;
+  min_roi?: number;
+  max_roi?: number;
+  tags?: string[];
+  author?: string;
+  search?: string;
+  sort_by?: "created_at" | "roi" | "fork_count" | "sharpe";
+  sort_order?: "asc" | "desc";
+}
+
+export interface ForkNotebookRequest {
+  published_notebook_id: string;
+  new_title?: string;
+}

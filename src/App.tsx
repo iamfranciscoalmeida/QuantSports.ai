@@ -3,6 +3,8 @@ import { useRoutes, Routes, Route } from "react-router-dom";
 import Home from "./components/home";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Notebook } from "./components/notebook/Notebook";
+import { GalleryListing } from "./components/gallery/GalleryListing";
+import { StrategyDetail } from "./components/gallery/StrategyDetail";
 import { useAuth } from "./hooks/useAuth";
 import { Toaster } from "./components/ui/toaster";
 import { ThemeProvider } from "./components/ui/theme-provider";
@@ -42,6 +44,8 @@ function App() {
               element={user ? <Dashboard /> : <Home />}
             />
             <Route path="/notebook" element={user ? <Notebook /> : <Home />} />
+            <Route path="/gallery" element={<GalleryListing />} />
+            <Route path="/gallery/:slug" element={<StrategyDetail />} />
           </Routes>
           {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
           <Toaster />
