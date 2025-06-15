@@ -19,7 +19,7 @@ module.exports = {
     extend: {
       fontFamily: {
         mono: ["JetBrains Mono", "Fira Code", "IBM Plex Mono", "monospace"],
-        sans: ["Inter", "Space Grotesk", "system-ui", "sans-serif"],
+        sans: ["Space Grotesk", "Inter", "system-ui", "sans-serif"],
         code: ["JetBrains Mono", "Fira Code", "monospace"],
       },
       colors: {
