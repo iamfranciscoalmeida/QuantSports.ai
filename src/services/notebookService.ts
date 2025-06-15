@@ -14,6 +14,11 @@ import {
   GalleryFilters,
   ForkNotebookRequest,
   Notebook,
+  StrategyTemplate,
+  StrategyVersion,
+  StrategyMetadata,
+  NewStrategyRequest,
+  AIPromptRequest,
 } from "@/types/notebook";
 import { supabase } from "@/lib/supabase";
 
@@ -646,6 +651,509 @@ print(f"Context cells: {len(context)}")
     };
 
     return forkedNotebook;
+  }
+
+  // Strategy Template Methods
+  static async getStrategyTemplates(): Promise<StrategyTemplate[]> {
+    // Mock templates for development - replace with actual API call
+    return [
+      {
+        id: "value_bet",
+        name: "Value Betting Strategy",
+        description:
+          "Bets when expected value exceeds threshold based on fair odds model. Uses Kelly criterion for optimal stake sizing.",
+        code: `class ValueBettingStrategy:
+    def __init__(self):
+        self.bankroll = 1000
+        self.ev_threshold = 0.05  # 5% minimum expected value
+        self.stake_model = "kelly"
+        self.max_stake_pct = 0.25  # Max 25% of bankroll per bet
+    
+    def initialize(self):
+        """Initialize strategy parameters"""
+        print(f"Value Betting Strategy initialized")
+        print(f"Bankroll: ${self.bankroll}")
+        print(f"EV Threshold: {self.ev_threshold*100}%")
+        print(f"Stake Model: {self.stake_model}")
+    
+    def calculate_fair_odds(self, event, market):
+        """Calculate fair odds using your model - replace with actual logic"""
+        # Mock fair odds calculation
+        import random
+        return random.uniform(1.5, 4.0)
+    
+    def expected_value(self, market_odds, fair_odds):
+        """Calculate expected value of a bet"""
+        implied_prob = 1 / market_odds
+        fair_prob = 1 / fair_odds
+        return (market_odds * fair_prob) - 1
+    
+    def kelly_stake(self, odds, win_probability):
+        """Calculate Kelly criterion stake"""
+        b = odds - 1  # Net odds
+        p = win_probability
+        q = 1 - p
+        
+        kelly_fraction = (b * p - q) / b
+        kelly_fraction = max(0, min(kelly_fraction, self.max_stake_pct))
+        
+        return self.bankroll * kelly_fraction
+    
+    def on_event(self, event, odds):
+        """Main strategy logic - returns list of bets"""
+        bets = []
+        
+        for market, market_odds in odds.items():
+            for selection, odd_value in market_odds.items():
+                # Calculate fair odds for this selection
+                fair_odds = self.calculate_fair_odds(event, selection)
+                
+                # Calculate expected value
+                ev = self.expected_value(odd_value, fair_odds)
+                
+                # Check if bet meets our criteria
+                if ev > self.ev_threshold:
+                    win_prob = 1 / fair_odds
+                    
+                    if self.stake_model == "kelly":
+                        stake = self.kelly_stake(odd_value, win_prob)
+                    else:
+                        stake = self.bankroll * 0.02  # 2% flat stake
+                    
+                    if stake > 0:
+                        bets.append({
+                            "market": market,
+                            "selection": selection,
+                            "odds": odd_value,
+                            "stake": round(stake, 2),
+                            "expected_value": ev,
+                            "confidence": min(ev / self.ev_threshold, 2.0)
+                        })
+        
+        return bets`,
+        parameters: {
+          ev_threshold: 0.05,
+          stake_model: "kelly",
+          max_stake_pct: 0.25,
+          bankroll: 1000,
+        },
+        tags: ["value", "EV", "kelly", "low-risk"],
+        sport: "all",
+        difficulty: "beginner",
+        expected_roi: 15.2,
+        risk_level: "low",
+        created_at: "2024-01-01T00:00:00Z",
+        author: "QuantSports Team",
+      },
+      {
+        id: "closing_line_value",
+        name: "Closing Line Value Strategy",
+        description:
+          "Identifies bets with positive closing line value by comparing bet odds to closing market odds.",
+        code: `class ClosingLineValueStrategy:
+    def __init__(self):
+        self.bankroll = 1000
+        self.min_clv = 0.03  # Minimum 3% CLV
+        self.stake_percentage = 0.03  # 3% of bankroll per bet
+        self.min_odds = 1.5
+        self.max_odds = 4.0
+    
+    def initialize(self):
+        """Initialize CLV strategy"""
+        print(f"Closing Line Value Strategy initialized")
+        print(f"Minimum CLV: {self.min_clv*100}%")
+        print(f"Stake: {self.stake_percentage*100}% of bankroll")
+    
+    def calculate_clv(self, bet_odds, closing_odds):
+        """Calculate Closing Line Value"""
+        bet_prob = 1 / bet_odds
+        closing_prob = 1 / closing_odds
+        return (closing_prob - bet_prob) / bet_prob
+    
+    def on_event(self, event, odds, closing_odds=None):
+        """Strategy logic for CLV betting"""
+        if not closing_odds:
+            return []  # Need closing odds for CLV calculation
+        
+        bets = []
+        
+        for market in odds:
+            for selection in odds[market]:
+                bet_odds = odds[market][selection]
+                close_odds = closing_odds.get(market, {}).get(selection)
+                
+                if not close_odds or bet_odds < self.min_odds or bet_odds > self.max_odds:
+                    continue
+                
+                clv = self.calculate_clv(bet_odds, close_odds)
+                
+                if clv > self.min_clv:
+                    stake = self.bankroll * self.stake_percentage
+                    
+                    bets.append({
+                        "market": market,
+                        "selection": selection,
+                        "odds": bet_odds,
+                        "stake": stake,
+                        "clv": clv,
+                        "closing_odds": close_odds
+                    })
+        
+        return bets`,
+        parameters: {
+          min_clv: 0.03,
+          stake_percentage: 0.03,
+          min_odds: 1.5,
+          max_odds: 4.0,
+        },
+        tags: ["CLV", "closing-line", "arbitrage", "medium-risk"],
+        sport: "all",
+        difficulty: "intermediate",
+        expected_roi: 12.8,
+        risk_level: "medium",
+        created_at: "2024-01-01T00:00:00Z",
+        author: "QuantSports Team",
+      },
+      {
+        id: "ml_classifier",
+        name: "ML Team Stats Classifier",
+        description:
+          "Uses machine learning to predict outcomes based on team statistics and historical performance.",
+        code: `import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+
+class MLClassifierStrategy:
+    def __init__(self):
+        self.bankroll = 1000
+        self.min_confidence = 0.65  # Minimum model confidence
+        self.stake_percentage = 0.04  # 4% of bankroll
+        self.model = None
+        self.scaler = StandardScaler()
+        self.features = [
+            'home_win_rate', 'away_win_rate', 'home_avg_goals', 'away_avg_goals',
+            'home_defense_rating', 'away_defense_rating', 'head_to_head_record'
+        ]
+    
+    def initialize(self):
+        """Initialize ML model"""
+        print("ML Classifier Strategy initialized")
+        print(f"Minimum confidence: {self.min_confidence*100}%")
+        
+        # Train model with historical data (mock)
+        self.train_model()
+    
+    def train_model(self):
+        """Train the ML model - replace with actual training data"""
+        # Mock training data
+        np.random.seed(42)
+        X = np.random.rand(1000, len(self.features))
+        y = np.random.choice([0, 1], 1000, p=[0.6, 0.4])  # 40% win rate
+        
+        # Scale features
+        X_scaled = self.scaler.fit_transform(X)
+        
+        # Train model
+        self.model = RandomForestClassifier(n_estimators=100, random_state=42)
+        self.model.fit(X_scaled, y)
+        
+        print(f"Model trained with {len(X)} samples")
+    
+    def extract_features(self, event):
+        """Extract features from event data - replace with actual feature extraction"""
+        # Mock feature extraction
+        return np.random.rand(len(self.features))
+    
+    def predict_outcome(self, event):
+        """Predict outcome using ML model"""
+        if not self.model:
+            return None, 0.5
+        
+        features = self.extract_features(event)
+        features_scaled = self.scaler.transform([features])
+        
+        prediction = self.model.predict(features_scaled)[0]
+        confidence = self.model.predict_proba(features_scaled)[0].max()
+        
+        return prediction, confidence
+    
+    def on_event(self, event, odds):
+        """ML-based betting strategy"""
+        bets = []
+        
+        prediction, confidence = self.predict_outcome(event)
+        
+        if prediction is None or confidence < self.min_confidence:
+            return bets
+        
+        # Look for value bets based on ML prediction
+        for market, market_odds in odds.items():
+            if market == "moneyline" or market == "match_winner":
+                for selection, odd_value in market_odds.items():
+                    implied_prob = 1 / odd_value
+                    
+                    # If our model predicts this outcome with high confidence
+                    # and the market odds suggest lower probability
+                    if (prediction == 1 and "home" in selection.lower() and 
+                        confidence > implied_prob + 0.1):
+                        
+                        stake = self.bankroll * self.stake_percentage
+                        
+                        bets.append({
+                            "market": market,
+                            "selection": selection,
+                            "odds": odd_value,
+                            "stake": stake,
+                            "ml_confidence": confidence,
+                            "edge": confidence - implied_prob
+                        })
+        
+        return bets`,
+        parameters: {
+          min_confidence: 0.65,
+          stake_percentage: 0.04,
+          model_type: "random_forest",
+          features_count: 7,
+        },
+        tags: ["ML", "machine-learning", "stats", "advanced", "high-risk"],
+        sport: "football",
+        difficulty: "advanced",
+        expected_roi: 22.5,
+        risk_level: "high",
+        created_at: "2024-01-01T00:00:00Z",
+        author: "QuantSports Team",
+      },
+      {
+        id: "underdog_momentum",
+        name: "Underdog Momentum Tracker",
+        description:
+          "Identifies underdog teams on winning streaks with favorable odds for momentum-based betting.",
+        code: `class UnderdogMomentumStrategy:
+    def __init__(self):
+        self.bankroll = 1000
+        self.min_odds = 2.5  # Only bet on underdogs (odds > 2.5)
+        self.max_odds = 8.0  # Avoid extreme longshots
+        self.min_streak = 2  # Minimum winning streak
+        self.stake_percentage = 0.05  # 5% of bankroll
+        self.momentum_threshold = 0.7  # Momentum score threshold
+    
+    def initialize(self):
+        """Initialize underdog momentum strategy"""
+        print("Underdog Momentum Strategy initialized")
+        print(f"Target odds range: {self.min_odds} - {self.max_odds}")
+        print(f"Minimum streak: {self.min_streak} wins")
+    
+    def calculate_momentum_score(self, team_stats):
+        """Calculate momentum score based on recent performance"""
+        # Mock momentum calculation - replace with actual logic
+        recent_wins = team_stats.get('recent_wins', 0)
+        recent_games = team_stats.get('recent_games', 5)
+        goal_difference = team_stats.get('recent_goal_diff', 0)
+        
+        win_rate = recent_wins / recent_games if recent_games > 0 else 0
+        goal_momentum = min(goal_difference / 10, 0.3)  # Cap at 0.3
+        
+        return win_rate + goal_momentum
+    
+    def is_underdog_on_streak(self, team, odds_value):
+        """Check if team qualifies as underdog with momentum"""
+        if odds_value < self.min_odds or odds_value > self.max_odds:
+            return False, 0
+        
+        # Mock team stats - replace with actual data
+        team_stats = {
+            'recent_wins': 3,
+            'recent_games': 5,
+            'recent_goal_diff': 4,
+            'winning_streak': 3
+        }
+        
+        momentum_score = self.calculate_momentum_score(team_stats)
+        has_streak = team_stats.get('winning_streak', 0) >= self.min_streak
+        
+        return has_streak and momentum_score >= self.momentum_threshold, momentum_score
+    
+    def on_event(self, event, odds):
+        """Underdog momentum betting logic"""
+        bets = []
+        
+        for market, market_odds in odds.items():
+            if market in ["moneyline", "match_winner"]:
+                for selection, odd_value in market_odds.items():
+                    # Check if this is a qualifying underdog
+                    qualifies, momentum = self.is_underdog_on_streak(selection, odd_value)
+                    
+                    if qualifies:
+                        # Scale stake based on momentum strength
+                        momentum_multiplier = min(momentum / self.momentum_threshold, 1.5)
+                        stake = self.bankroll * self.stake_percentage * momentum_multiplier
+                        
+                        bets.append({
+                            "market": market,
+                            "selection": selection,
+                            "odds": odd_value,
+                            "stake": round(stake, 2),
+                            "momentum_score": momentum,
+                            "bet_type": "underdog_momentum"
+                        })
+        
+        return bets`,
+        parameters: {
+          min_odds: 2.5,
+          max_odds: 8.0,
+          min_streak: 2,
+          stake_percentage: 0.05,
+          momentum_threshold: 0.7,
+        },
+        tags: ["underdog", "momentum", "streaks", "high-risk"],
+        sport: "football",
+        difficulty: "intermediate",
+        expected_roi: 18.9,
+        risk_level: "high",
+        created_at: "2024-01-01T00:00:00Z",
+        author: "QuantSports Team",
+      },
+    ];
+  }
+
+  static async createStrategyFromTemplate(
+    templateId: string,
+    request: NewStrategyRequest,
+  ): Promise<Notebook> {
+    const templates = await this.getStrategyTemplates();
+    const template = templates.find((t) => t.id === templateId);
+
+    if (!template) {
+      throw new Error("Template not found");
+    }
+
+    // Create notebook from template
+    const notebook: Notebook = {
+      id: `strategy-${Date.now()}`,
+      title: request.name,
+      cells: [
+        {
+          id: `cell-${Date.now()}-1`,
+          type: "markdown",
+          content: `# ${request.name}\n\n**Strategy Type:** ${template.name}\n**Sport:** ${request.sport}\n**Description:** ${template.description}\n\n---\n\n## Parameters\nAdjust these parameters to customize your strategy:\n\n${Object.entries(
+            template.parameters,
+          )
+            .map(([key, value]) => `- **${key}**: ${value}`)
+            .join("\n")}`,
+          executionCount: 0,
+        },
+        {
+          id: `cell-${Date.now()}-2`,
+          type: "code",
+          content: template.code,
+          executionCount: 0,
+        },
+        {
+          id: `cell-${Date.now()}-3`,
+          type: "code",
+          content: `# Initialize and test the strategy\nstrategy = ${template.name.replace(/\s+/g, "")}()\nstrategy.initialize()\n\n# Test with sample event data\nsample_event = {\n    "home_team": "Team A",\n    "away_team": "Team B",\n    "league": "${request.sport.toUpperCase()}",\n    "date": "2024-01-15"\n}\n\nsample_odds = {\n    "moneyline": {\n        "Team A": 2.1,\n        "Team B": 1.8\n    }\n}\n\n# Generate bets\nbets = strategy.on_event(sample_event, sample_odds)\nprint(f"Generated {len(bets)} bets:")\nfor bet in bets:\n    print(f"- {bet}")`,
+          executionCount: 0,
+        },
+      ],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    return notebook;
+  }
+
+  static async createStrategyFromPrompt(
+    request: AIPromptRequest,
+  ): Promise<AIResponse> {
+    // Mock AI strategy generation - replace with actual OpenAI API call
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    const { prompt, sport = "football" } = request;
+
+    // Generate strategy based on prompt
+    const strategyName = prompt.split(" ").slice(0, 3).join("") + "Strategy";
+
+    return {
+      code: `class ${strategyName}:
+    def __init__(self):
+        self.bankroll = 1000
+        # Strategy parameters based on your prompt:
+        # "${prompt}"
+        
+        # TODO: Customize these parameters
+        self.min_confidence = 0.6
+        self.stake_percentage = 0.03
+        
+    def initialize(self):
+        """Initialize your custom strategy"""
+        print(f"${strategyName} initialized")
+        print(f"Bankroll: ${self.bankroll}")
+        
+    def analyze_event(self, event):
+        """Analyze event based on your criteria"""
+        # TODO: Implement your analysis logic here
+        # Based on: ${prompt}
+        
+        # Mock analysis
+        import random
+        return {
+            "confidence": random.uniform(0.4, 0.9),
+            "predicted_outcome": random.choice(["home", "away", "draw"]),
+            "edge": random.uniform(-0.1, 0.2)
+        }
+        
+    def on_event(self, event, odds):
+        """Main strategy logic"""
+        analysis = self.analyze_event(event)
+        bets = []
+        
+        if analysis["confidence"] > self.min_confidence and analysis["edge"] > 0:
+            # Find matching market
+            for market, market_odds in odds.items():
+                for selection, odd_value in market_odds.items():
+                    # TODO: Add your betting logic here
+                    if analysis["edge"] > 0.05:  # 5% minimum edge
+                        stake = self.bankroll * self.stake_percentage
+                        
+                        bets.append({
+                            "market": market,
+                            "selection": selection,
+                            "odds": odd_value,
+                            "stake": stake,
+                            "confidence": analysis["confidence"],
+                            "edge": analysis["edge"]
+                        })
+                        
+        return bets
+
+# Initialize strategy
+strategy = ${strategyName}()
+strategy.initialize()`,
+      explanation: `I've created a custom strategy based on your prompt: "${prompt}". The strategy includes:\n\n1. **Analysis Framework**: A method to analyze events based on your criteria\n2. **Confidence Scoring**: Built-in confidence thresholds to filter bets\n3. **Edge Calculation**: Logic to identify profitable opportunities\n4. **Bankroll Management**: Percentage-based stake sizing\n\nNext steps:\n1. Customize the analyze_event() method with your specific logic\n2. Adjust the confidence and edge thresholds\n3. Add any sport-specific analysis (${sport})\n4. Test with historical data using the backtest feature`,
+    };
+  }
+
+  static async saveStrategyVersion(
+    notebook: Notebook,
+    metadata: StrategyMetadata,
+    changelog?: string,
+  ): Promise<StrategyVersion> {
+    const version: StrategyVersion = {
+      id: `version-${Date.now()}`,
+      notebook_id: notebook.id,
+      version_number: metadata.current_version + 1,
+      title: notebook.title,
+      changelog,
+      cells: notebook.cells,
+      parameters: metadata.parameters,
+      created_at: new Date().toISOString(),
+    };
+
+    // In production, save to database
+    console.log("Saving strategy version:", version);
+
+    return version;
   }
 
   static async getSamplePublishedNotebooks(): Promise<PublishedNotebook[]> {

@@ -197,3 +197,59 @@ export interface ForkNotebookRequest {
   published_notebook_id: string;
   new_title?: string;
 }
+
+export interface StrategyTemplate {
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+  parameters: Record<string, any>;
+  tags: string[];
+  sport?: string;
+  difficulty: "beginner" | "intermediate" | "advanced";
+  expected_roi?: number;
+  risk_level: "low" | "medium" | "high";
+  created_at: string;
+  author?: string;
+}
+
+export interface StrategyVersion {
+  id: string;
+  notebook_id: string;
+  version_number: number;
+  title: string;
+  changelog?: string;
+  cells: NotebookCell[];
+  parameters: Record<string, any>;
+  created_at: string;
+  backtest_results?: BacktestResult;
+}
+
+export interface StrategyMetadata {
+  id: string;
+  name: string;
+  description?: string;
+  sport: string;
+  tags: string[];
+  parameters: Record<string, any>;
+  forked_from?: string;
+  current_version: number;
+  last_backtest?: BacktestSummary;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NewStrategyRequest {
+  name: string;
+  sport: string;
+  template_id?: string;
+  ai_prompt?: string;
+  enable_ai_assist?: boolean;
+}
+
+export interface AIPromptRequest {
+  prompt: string;
+  sport?: string;
+  context?: string[];
+  template_context?: StrategyTemplate;
+}

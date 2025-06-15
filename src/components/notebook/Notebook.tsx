@@ -28,8 +28,15 @@ import {
   X,
   Target,
   DollarSign,
+  Sparkles,
+  Layers,
+  Home,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { NotebookCell } from "./NotebookCell";
+import { StrategyCreator } from "./StrategyCreator";
+import { StrategySummary } from "./StrategySummary";
+import { AIPromptBar } from "./AIPromptBar";
 import {
   NotebookCell as CellType,
   Notebook as NotebookType,
@@ -37,10 +44,20 @@ import {
   AIMessage,
   SportsBettingContext,
   BettingFunction,
+  StrategyMetadata,
 } from "@/types/notebook";
+
+interface CodeTab {
+  id: string;
+  name: string;
+  content: string;
+  type: "notebook" | "script";
+  active: boolean;
+}
 import { NotebookService } from "@/services/notebookService";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface NotebookProps {
   className?: string;
@@ -48,6 +65,7 @@ interface NotebookProps {
 
 export function Notebook({ className }: NotebookProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [notebook, setNotebook] = useState<NotebookType>({
     id: "notebook-1",
     title: "Sports Betting Strategy",
@@ -88,6 +106,36 @@ export function Notebook({ className }: NotebookProps) {
     NotebookService.getBettingFunctions(),
   );
   const [fileTreeExpanded, setFileTreeExpanded] = useState(true);
+  const [strategyMetadata, setStrategyMetadata] = useState<StrategyMetadata>({
+    id: notebook.id,
+    name: notebook.title,
+    description: "A quantitative sports betting strategy",
+    sport: "football",
+    tags: ["value", "quantitative"],
+    parameters: {
+      bankroll: 1000,
+      stake_percentage: 0.03,
+      min_odds: 1.5,
+      max_odds: 4.0,
+    },
+    current_version: 1,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+  const [showAIPromptBar, setShowAIPromptBar] = useState(false);
+  const [codeTabs, setCodeTabs] = useState<CodeTab[]>([
+    {
+      id: "notebook-1",
+      name: notebook.title,
+      content: "",
+      type: "notebook",
+      active: true,
+    },
+  ]);
+  const [activeCodeTab, setActiveCodeTab] = useState("notebook-1");
+  const [scriptContent, setScriptContent] = useState<Record<string, string>>(
+    {},
+  );
 
   const updateCell = useCallback((cellId: string, content: string) => {
     setNotebook((prev) => ({
@@ -407,26 +455,188 @@ export function Notebook({ className }: NotebookProps) {
     [notebook.cells],
   );
 
+  const handleStrategyCreated = useCallback((newNotebook: NotebookType) => {
+    setNotebook(newNotebook);
+    setStrategyMetadata({
+      id: newNotebook.id,
+      name: newNotebook.title,
+      description: "A quantitative sports betting strategy",
+      sport: "football",
+      tags: ["quantitative", "strategy"],
+      parameters: {},
+      current_version: 1,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+  }, []);
+
+  const handleSaveVersion = useCallback(
+    (changelog?: string) => {
+      const newVersion = strategyMetadata.current_version + 1;
+      setStrategyMetadata((prev) => ({
+        ...prev,
+        current_version: newVersion,
+        updated_at: new Date().toISOString(),
+      }));
+
+      // In production, save to backend
+      NotebookService.saveStrategyVersion(
+        notebook,
+        strategyMetadata,
+        changelog,
+      );
+    },
+    [notebook, strategyMetadata],
+  );
+
+  const handleUpdateMetadata = useCallback(
+    (updates: Partial<StrategyMetadata>) => {
+      setStrategyMetadata((prev) => ({
+        ...prev,
+        ...updates,
+        updated_at: new Date().toISOString(),
+      }));
+    },
+    [],
+  );
+
+  const addNewScript = useCallback(() => {
+    const newScriptId = `script-${Date.now()}`;
+    const newScript: CodeTab = {
+      id: newScriptId,
+      name: `script_${codeTabs.filter((tab) => tab.type === "script").length + 1}.py`,
+      content: "",
+      type: "script",
+      active: false,
+    };
+
+    setCodeTabs((prev) => [
+      ...prev.map((tab) => ({ ...tab, active: false })),
+      { ...newScript, active: true },
+    ]);
+    setActiveCodeTab(newScriptId);
+    setScriptContent((prev) => ({
+      ...prev,
+      [newScriptId]: "# New Python script\n",
+    }));
+  }, [codeTabs]);
+
+  const switchTab = useCallback((tabId: string) => {
+    setCodeTabs((prev) =>
+      prev.map((tab) => ({ ...tab, active: tab.id === tabId })),
+    );
+    setActiveCodeTab(tabId);
+  }, []);
+
+  const closeTab = useCallback(
+    (tabId: string) => {
+      if (codeTabs.length <= 1) return; // Don't close the last tab
+
+      const tabIndex = codeTabs.findIndex((tab) => tab.id === tabId);
+      const isActive = codeTabs[tabIndex].active;
+
+      setCodeTabs((prev) => {
+        const newTabs = prev.filter((tab) => tab.id !== tabId);
+        if (isActive && newTabs.length > 0) {
+          const newActiveIndex = Math.min(tabIndex, newTabs.length - 1);
+          newTabs[newActiveIndex].active = true;
+          setActiveCodeTab(newTabs[newActiveIndex].id);
+        }
+        return newTabs;
+      });
+
+      // Clean up script content
+      setScriptContent((prev) => {
+        const newContent = { ...prev };
+        delete newContent[tabId];
+        return newContent;
+      });
+    },
+    [codeTabs],
+  );
+
+  const updateScriptContent = useCallback((tabId: string, content: string) => {
+    setScriptContent((prev) => ({ ...prev, [tabId]: content }));
+  }, []);
+
+  const handleAICodeGenerated = useCallback(
+    (code: string, explanation?: string) => {
+      const newCell: CellType = {
+        id: `cell-${Date.now()}`,
+        type: "code",
+        content: code,
+        executionCount: 0,
+      };
+
+      if (explanation) {
+        const explanationCell: CellType = {
+          id: `cell-${Date.now()}-explanation`,
+          type: "markdown",
+          content: `## AI Generated Code\n\n${explanation}`,
+          executionCount: 0,
+        };
+
+        setNotebook((prev) => ({
+          ...prev,
+          cells: [...prev.cells, explanationCell, newCell],
+          updatedAt: new Date(),
+        }));
+      } else {
+        setNotebook((prev) => ({
+          ...prev,
+          cells: [...prev.cells, newCell],
+          updatedAt: new Date(),
+        }));
+      }
+
+      setShowAIPromptBar(false);
+    },
+    [],
+  );
+
   return (
     <div className={cn("ide-layout", className)}>
       {/* IDE Header */}
       <div className="ide-header">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-quant-error rounded-full"></div>
-            <div className="w-3 h-3 bg-quant-warning rounded-full"></div>
-            <div className="w-3 h-3 bg-quant-success rounded-full"></div>
-          </div>
-
           <div className="flex items-center space-x-1">
-            <div className="px-3 py-1 bg-quant-bg-tertiary text-quant-text text-sm rounded-t-lg border-b-2 border-quant-accent">
-              <FileText className="h-4 w-4 inline mr-2" />
-              {notebook.title}.ipynb
-            </div>
-            <div className="px-3 py-1 text-quant-text-muted text-sm hover:text-quant-text cursor-pointer">
-              <Code className="h-4 w-4 inline mr-2" />
-              main.py
-            </div>
+            {codeTabs.map((tab) => (
+              <div
+                key={tab.id}
+                className={cn(
+                  "flex items-center px-3 py-1 text-sm rounded-t-lg cursor-pointer group",
+                  tab.active
+                    ? "bg-quant-bg-tertiary text-quant-text border-b-2 border-quant-accent"
+                    : "text-quant-text-muted hover:text-quant-text hover:bg-quant-bg-tertiary/50",
+                )}
+                onClick={() => switchTab(tab.id)}
+              >
+                {tab.type === "notebook" ? (
+                  <FileText className="h-4 w-4 mr-2" />
+                ) : (
+                  <Code className="h-4 w-4 mr-2" />
+                )}
+                {tab.type === "notebook" ? `${tab.name}.ipynb` : tab.name}
+                {tab.type === "script" && codeTabs.length > 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeTab(tab.id);
+                    }}
+                    className="ml-2 opacity-0 group-hover:opacity-100 hover:bg-quant-error/20 rounded p-0.5 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              onClick={addNewScript}
+              className="flex items-center px-2 py-1 text-quant-text-muted hover:text-quant-text hover:bg-quant-bg-tertiary/50 rounded-t-lg text-sm transition-colors"
+              title="Add new script"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
@@ -450,6 +660,16 @@ export function Notebook({ className }: NotebookProps) {
             className="text-quant-text-muted hover:text-quant-text"
           >
             <Settings className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/dashboard")}
+            className="text-quant-text-muted hover:text-quant-text"
+            title="Go to Dashboard"
+          >
+            <Home className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -656,103 +876,122 @@ export function Notebook({ className }: NotebookProps) {
 
         {/* Main Content Area */}
         <div className="ide-content">
-          {/* Notebook Content */}
+          {/* Content based on active tab */}
           <div className="flex-1 overflow-auto">
-            <div className="max-w-4xl mx-auto px-6 py-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-4">
-                  <h1 className="text-xl font-semibold text-quant-text font-sans">
-                    {notebook.title}
-                  </h1>
-                  <span className="text-sm text-quant-text-muted font-mono">
-                    Last saved {notebook.updatedAt.toLocaleTimeString()}
-                  </span>
+            {activeCodeTab === "notebook-1" ? (
+              <div className="w-full px-6 py-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-4">
+                    <h1 className="text-xl font-semibold text-quant-text font-sans">
+                      {notebook.title}
+                    </h1>
+                    <span className="text-sm text-quant-text-muted font-mono">
+                      Last saved {notebook.updatedAt.toLocaleTimeString()}
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      v{strategyMetadata.current_version}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={runAllCells}
+                      disabled={isRunningAll}
+                      className="text-quant-success border-quant-success/30 hover:bg-quant-success/10"
+                    >
+                      {isRunningAll ? (
+                        <Zap className="h-4 w-4 mr-2 animate-pulse" />
+                      ) : (
+                        <Play className="h-4 w-4 mr-2" />
+                      )}
+                      Run All
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addCell()}
+                      className="text-quant-accent border-quant-accent/30 hover:bg-quant-accent/10"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Cell
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAIPromptBar(!showAIPromptBar)}
+                      className={cn(
+                        "text-quant-warning border-quant-warning/30 hover:bg-quant-warning/10",
+                        showAIPromptBar && "bg-quant-warning/10",
+                      )}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      AI Generate
+                    </Button>
+
+                    <Button variant="outline" size="sm">
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={runAllCells}
-                    disabled={isRunningAll}
-                    className="text-quant-success border-quant-success/30 hover:bg-quant-success/10"
-                  >
-                    {isRunningAll ? (
-                      <Zap className="h-4 w-4 mr-2 animate-pulse" />
-                    ) : (
-                      <Play className="h-4 w-4 mr-2" />
-                    )}
-                    Run All
-                  </Button>
+                {/* AI Prompt Bar */}
+                {showAIPromptBar && (
+                  <div className="mb-6">
+                    <AIPromptBar
+                      onCodeGenerated={handleAICodeGenerated}
+                      contextCells={notebook.cells}
+                      sport={strategyMetadata.sport}
+                    />
+                  </div>
+                )}
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addCell()}
-                    className="text-quant-accent border-quant-accent/30 hover:bg-quant-accent/10"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Cell
-                  </Button>
+                <div className="space-y-6">
+                  {notebook.cells.map((cell, index) => (
+                    <NotebookCell
+                      key={cell.id}
+                      cell={cell}
+                      onUpdate={updateCell}
+                      onDelete={deleteCell}
+                      onRunCell={runCell}
+                      onAIAssist={handleAIAssist}
+                      onRunBacktest={handleRunBacktest}
+                      isLast={index === notebook.cells.length - 1}
+                      contextCells={getContextCells(cell.id)}
+                    />
+                  ))}
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const strategyCode =
-                        NotebookService.generateSampleStrategy();
-                      const newCell = {
-                        id: `cell-${Date.now()}`,
-                        type: "code" as const,
-                        content: strategyCode,
-                        executionCount: 0,
-                      };
-                      setNotebook((prev) => ({
-                        ...prev,
-                        cells: [...prev.cells, newCell],
-                        updatedAt: new Date(),
-                      }));
-                    }}
-                    className="text-quant-warning border-quant-warning/30 hover:bg-quant-warning/10"
-                  >
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Add Strategy Template
-                  </Button>
-
-                  <Button variant="outline" size="sm">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save
-                  </Button>
+                  <div className="flex justify-center py-8">
+                    <Button
+                      variant="outline"
+                      onClick={() => addCell()}
+                      className="text-quant-accent border-quant-accent/30 hover:bg-quant-accent/10 border-dashed"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add New Cell
+                    </Button>
+                  </div>
                 </div>
               </div>
-
-              <div className="space-y-6">
-                {notebook.cells.map((cell, index) => (
-                  <NotebookCell
-                    key={cell.id}
-                    cell={cell}
-                    onUpdate={updateCell}
-                    onDelete={deleteCell}
-                    onRunCell={runCell}
-                    onAIAssist={handleAIAssist}
-                    onRunBacktest={handleRunBacktest}
-                    isLast={index === notebook.cells.length - 1}
-                    contextCells={getContextCells(cell.id)}
+            ) : (
+              <div className="h-full">
+                <div className="h-full bg-quant-bg-secondary">
+                  <textarea
+                    value={scriptContent[activeCodeTab] || ""}
+                    onChange={(e) =>
+                      updateScriptContent(activeCodeTab, e.target.value)
+                    }
+                    className="w-full h-full p-4 bg-transparent text-quant-text font-mono text-sm resize-none focus:outline-none"
+                    placeholder="# Write your Python script here..."
+                    spellCheck={false}
                   />
-                ))}
-
-                <div className="flex justify-center py-8">
-                  <Button
-                    variant="outline"
-                    onClick={() => addCell()}
-                    className="text-quant-accent border-quant-accent/30 hover:bg-quant-accent/10 border-dashed"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add New Cell
-                  </Button>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Terminal */}
@@ -798,8 +1037,8 @@ export function Notebook({ className }: NotebookProps) {
 
         {/* AI Assistant Sidebar */}
         {showAISidebar && (
-          <div className="ai-sidebar">
-            <div className="p-4 border-b border-quant-border flex items-center justify-between">
+          <div className="w-80 bg-quant-bg-secondary border-l border-quant-border flex flex-col h-full">
+            <div className="p-4 border-b border-quant-border flex items-center justify-between flex-shrink-0">
               <div className="flex items-center space-x-2">
                 <Brain className="h-5 w-5 text-quant-accent" />
                 <h3 className="font-medium text-quant-text">AI Assistant</h3>
@@ -814,7 +1053,7 @@ export function Notebook({ className }: NotebookProps) {
               </Button>
             </div>
 
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-h-0">
               <div className="flex-1 overflow-auto p-4 space-y-4">
                 {aiMessages.length === 0 ? (
                   <div className="text-center py-8">
@@ -839,7 +1078,7 @@ export function Notebook({ className }: NotebookProps) {
                 )}
               </div>
 
-              <div className="p-4 border-t border-quant-border">
+              <div className="p-4 border-t border-quant-border flex-shrink-0">
                 <div className="flex space-x-2">
                   <input
                     type="text"
