@@ -13,6 +13,7 @@ import { SimulateStrategyTool } from './tools/simulateStrategy';
 import { GenerateCodeTool } from './tools/generateCode';
 import { AnalyzeTeamTool } from './tools/analyzeTeam';
 import { DiscoverPatternsTool } from './tools/discoverPatterns';
+import { QueryStatssTool } from './tools/queryStats';
 
 export interface AIRequest {
   query: string;
@@ -63,7 +64,7 @@ export interface ToolResult {
 
 // Intent classification schema
 const IntentClassificationSchema = z.object({
-  intent: z.enum(['code_generation', 'strategy_analysis', 'team_analysis', 'pattern_discovery', 'general_query']),
+  intent: z.enum(['code_generation', 'strategy_analysis', 'team_analysis', 'pattern_discovery', 'stats_query', 'general_query']),
   confidence: z.number().min(0).max(1),
   parameters: z.record(z.any()).optional(),
   suggestedTools: z.array(z.string()).optional(),
@@ -168,7 +169,8 @@ export class EnhancedAIOrchestrator {
       new SimulateStrategyTool(),
       new GenerateCodeTool(),
       new AnalyzeTeamTool(),
-      new DiscoverPatternsTool()
+      new DiscoverPatternsTool(),
+      new QueryStatssTool()
     ];
     
     toolInstances.forEach(tool => {
@@ -358,6 +360,18 @@ export class EnhancedAIOrchestrator {
         intent: 'pattern_discovery',
         confidence: 0.8,
         suggestedTools: ['discover_patterns']
+      };
+    }
+
+    // Enhanced stats detection - covers goals, win rates, averages, etc.
+    if (lowerQuery.includes('goals') || lowerQuery.includes('average') || lowerQuery.includes('goal') ||
+        lowerQuery.includes('win rate') || lowerQuery.includes('roi') || lowerQuery.includes('over') ||
+        lowerQuery.includes('under') || lowerQuery.includes('stats') || lowerQuery.includes('statistics') ||
+        lowerQuery.includes('performance') || lowerQuery.includes('scored') || lowerQuery.includes('conceded')) {
+      return {
+        intent: 'stats_query',
+        confidence: 0.9,
+        suggestedTools: ['query_stats']
       };
     }
     
@@ -555,6 +569,8 @@ export class EnhancedAIOrchestrator {
         return this.extractCodeParams(query, context);
       case 'discover_patterns':
         return this.extractPatternParams(query, context);
+      case 'query_stats':
+        return this.extractStatsParams(query, context);
       default:
         return { query, context };
     }
@@ -624,6 +640,39 @@ export class EnhancedAIOrchestrator {
       pattern_type: patternType,
       timeframe: 'current_season',
       focus_area: query
+    };
+  }
+
+  private extractStatsParams(query: string, context: Record<string, any>): any {
+    const lowerQuery = query.toLowerCase();
+    const teams = this.extractTeamNames(query);
+    
+    // Determine metric type
+    let metric = 'general_stats';
+    if (lowerQuery.includes('goals') || lowerQuery.includes('goal') || lowerQuery.includes('scored') || lowerQuery.includes('conceded')) {
+      metric = 'goals_average';
+    } else if (lowerQuery.includes('win rate') || lowerQuery.includes('wins')) {
+      metric = 'win_rate';
+    } else if (lowerQuery.includes('roi') || lowerQuery.includes('return')) {
+      metric = 'roi';
+    } else if (lowerQuery.includes('over') || lowerQuery.includes('under')) {
+      metric = 'over_under';
+    }
+    
+    // Determine venue
+    let venue = 'all';
+    if (lowerQuery.includes('home') && !lowerQuery.includes('away')) {
+      venue = 'home';
+    } else if (lowerQuery.includes('away') && !lowerQuery.includes('home')) {
+      venue = 'away';
+    }
+    
+    return {
+      team: teams.length > 0 ? teams[0] : undefined,
+      metric,
+      venue,
+      season: context.season,
+      timeframe: context.timeframe || 'last_season'
     };
   }
 

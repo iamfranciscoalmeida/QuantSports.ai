@@ -20,6 +20,7 @@ import { ChatMessage, AIBettingResponse } from '@/types/epl';
 // import { BettingChart } from './BettingChart';
 // import { BettingTable } from './BettingTable';
 import { useToast } from '@/components/ui/use-toast';
+import { MarkdownRenderer } from '../MarkdownRenderer';
 
 interface BettingChatInterfaceProps {
   onCodeGenerated?: (code: string, explanation?: string) => void;
@@ -354,11 +355,10 @@ Try asking me anything about EPL betting data and I'll provide enhanced analysis
               >
                 {message.role === 'assistant' ? (
                   <div className="space-y-4">
-                    <div className="prose prose-invert max-w-none">
-                      <div dangerouslySetInnerHTML={{ 
-                        __html: message.content.replace(/\n/g, '<br/>') 
-                      }} />
-                    </div>
+                    <MarkdownRenderer 
+                      content={message.content} 
+                      className="prose prose-sm max-w-none text-quant-text" 
+                    />
                     
                     {/* Show streaming indicator */}
                     {message.isStreaming && (

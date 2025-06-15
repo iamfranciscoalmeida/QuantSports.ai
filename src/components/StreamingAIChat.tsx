@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Zap, Activity, AlertCircle, CheckCircle, Loader2, Settings, BarChart3 } from 'lucide-react';
 import { EnhancedAIOrchestrator, AIRequest, AIResponse } from '../services/ai/orchestrator-enhanced';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface Message {
   id: string;
@@ -374,25 +375,16 @@ I'm still here to help! Try:
                   : 'bg-white border border-gray-200'
               }`}
             >
-              <div className="prose prose-sm max-w-none">
-                {message.content.includes('#') || message.content.includes('**') ? (
-                  <div 
-                    className={message.isUser ? 'text-white' : 'text-gray-900'}
-                    dangerouslySetInnerHTML={{
-                      __html: message.content
-                        .replace(/# (.*)/g, '<h3 class="text-lg font-bold mb-2">$1</h3>')
-                        .replace(/## (.*)/g, '<h4 class="text-md font-semibold mb-2">$1</h4>')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/- (.*)/g, '<li>$1</li>')
-                        .replace(/\n/g, '<br/>')
-                    }}
-                  />
-                ) : (
-                  <p className={message.isUser ? 'text-white' : 'text-gray-900'}>
-                    {message.content}
-                  </p>
-                )}
-              </div>
+              {message.isUser ? (
+                <p className="text-white">
+                  {message.content}
+                </p>
+              ) : (
+                <MarkdownRenderer 
+                  content={message.content} 
+                  className="prose prose-sm max-w-none text-gray-900" 
+                />
+              )}
 
               {/* Message metadata */}
               {!message.isUser && (

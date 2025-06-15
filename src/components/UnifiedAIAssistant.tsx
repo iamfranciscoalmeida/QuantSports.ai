@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Bot, Code, TrendingUp, Brain } from 'lucide-react';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface Message {
   id: string;
@@ -186,32 +187,16 @@ export const UnifiedAIAssistant: React.FC = () => {
                       )}
                     </div>
                   )}
-                  <div className="prose prose-sm max-w-none">
-                    {message.content.split('\n').map((line, idx) => {
-                      if (line.startsWith('```')) {
-                        return null; // Handle code blocks separately if needed
-                      }
-                      if (line.startsWith('### ') || line.startsWith('## ')) {
-                        return (
-                          <div key={idx} className="font-semibold mt-2 mb-1">
-                            {line.replace(/^#+\s/, '')}
-                          </div>
-                        );
-                      }
-                      if (line.startsWith('- ')) {
-                        return (
-                          <div key={idx} className="ml-4">
-                            • {line.substring(2)}
-                          </div>
-                        );
-                      }
-                      return (
-                        <div key={idx} className={line.trim() === '' ? 'h-2' : ''}>
-                          {line}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {message.role === 'user' ? (
+                    <div className="text-white">
+                      {message.content}
+                    </div>
+                  ) : (
+                    <MarkdownRenderer 
+                      content={message.content} 
+                      className="prose prose-sm max-w-none text-gray-900" 
+                    />
+                  )}
                   <div className="text-xs opacity-70 mt-2">
                     {message.timestamp.toLocaleTimeString()}
                   </div>

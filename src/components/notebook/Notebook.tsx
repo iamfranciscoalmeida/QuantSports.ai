@@ -47,6 +47,7 @@ import {
   BettingFunction,
   StrategyMetadata,
 } from "@/types/notebook";
+import { MarkdownRenderer } from "../MarkdownRenderer";
 
 interface CodeTab {
   id: string;
@@ -1240,7 +1241,16 @@ Please try your request again in a moment, or rephrase it for a simpler response
                         message.role === "user" ? "user" : "assistant",
                       )}
                     >
-                      {message.content}
+                      {message.role === 'user' ? (
+                        <div className="text-quant-bg">
+                          {message.content}
+                        </div>
+                      ) : (
+                        <MarkdownRenderer 
+                          content={message.content} 
+                          className="prose prose-sm max-w-none text-quant-text" 
+                        />
+                      )}
                     </div>
                   ))
                 )}

@@ -231,6 +231,26 @@ export class DatabaseSportsBettingService {
 
       console.log(`📊 Found ${data?.length || 0} matches for ${teamName}`);
 
+      // Debug: If no matches found, let's check what's actually in the database
+      if ((data?.length || 0) === 0) {
+        console.log(`🔍 Debug: No matches found. Let's check what teams are available...`);
+        const { data: sampleData } = await supabase
+          .from('matches')
+          .select('home_team, away_team, season')
+          .limit(10);
+        
+        console.log(`🔍 Sample teams in database:`, sampleData?.map(m => `${m.home_team}, ${m.away_team} (${m.season})`));
+        
+        // Check if exact team name exists without filters
+        const { data: teamCheck } = await supabase
+          .from('matches')
+          .select('home_team, away_team, season')
+          .or(`home_team.eq.${exactTeamName},away_team.eq.${exactTeamName}`)
+          .limit(5);
+        
+        console.log(`🔍 Direct check for "${exactTeamName}":`, teamCheck?.map(m => `${m.home_team} vs ${m.away_team} (${m.season})`));
+      }
+
       // Transform database format to EPLMatch format and calculate analysis
       const matches = (data || []).map(DatabaseSportsBettingService.transformDatabaseMatch);
       

@@ -68,6 +68,19 @@ export class FixedAIOrchestrator {
   async processRequest(request: AIRequest): Promise<AIResponse | AsyncIterable<string>> {
     console.log('🔍 Fixed AI Orchestrator - Processing request:', request.query);
     
+    // Check if this is a stats query that we can handle directly with our tools
+    if (this.isStatsQuery(request.query)) {
+      console.log('📊 Detected stats query, attempting direct stats handling...');
+      try {
+        const statsResponse = await this.handleStatsQuery(request);
+        if (statsResponse) {
+          return statsResponse;
+        }
+      } catch (error) {
+        console.log('⚠️ Direct stats handling failed, continuing with normal flow:', error.message);
+      }
+    }
+    
     // Try enhanced orchestrator first if available
     if (this.useEnhanced && this.enhancedOrchestrator) {
       try {
@@ -284,6 +297,99 @@ The AI database connection is experiencing issues (Error: ${error.message}). Thi
         error: error instanceof Error ? error.message : 'Database service unavailable'
       };
     }
+  }
+
+  /**
+   * Check if query is asking for specific statistics
+   */
+  private isStatsQuery(query: string): boolean {
+    const lowerQuery = query.toLowerCase();
+    return lowerQuery.includes('goals') || lowerQuery.includes('average') || lowerQuery.includes('goal') ||
+           lowerQuery.includes('win rate') || lowerQuery.includes('roi') || lowerQuery.includes('over') ||
+           lowerQuery.includes('under') || lowerQuery.includes('stats') || lowerQuery.includes('statistics') ||
+           lowerQuery.includes('performance') || lowerQuery.includes('scored') || lowerQuery.includes('conceded');
+  }
+
+  /**
+   * Handle stats queries directly using our tools
+   */
+  private async handleStatsQuery(request: AIRequest): Promise<AIResponse | null> {
+    try {
+      const { QueryStatssTool } = await import('./tools/queryStats');
+      const queryStatsTool = new QueryStatssTool();
+      
+      // Extract parameters from the query
+      const params = this.extractStatsParameters(request.query);
+      
+      console.log('📊 Stats query parameters:', params);
+      
+      // Call the tool
+      const result = await queryStatsTool._call(params);
+      
+      return {
+        text: result,
+        provider: 'direct-stats-tool',
+        executionTime: 0,
+        usage: { tokens: 0 },
+        data: { 
+          tool_used: 'query_stats',
+          parameters: params 
+        }
+      };
+    } catch (error) {
+      console.error('Stats query handling failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Extract parameters for stats queries
+   */
+  private extractStatsParameters(query: string): any {
+    const lowerQuery = query.toLowerCase();
+    
+    // Extract team name
+    const teams = [
+      'Arsenal', 'Manchester United', 'Manchester City', 'Liverpool', 
+      'Chelsea', 'Tottenham', 'Newcastle', 'Brighton',
+      'West Ham', 'Aston Villa', 'Crystal Palace', 'Fulham',
+      'Brentford', 'Wolves', 'Everton', 'Nottingham Forest',
+      'Burnley', 'Sheffield United', 'Luton Town', 'Bournemouth'
+    ];
+    
+    const foundTeam = teams.find(team => 
+      lowerQuery.includes(team.toLowerCase()) ||
+      (team.includes('Manchester') && lowerQuery.includes('man')) ||
+      (team === 'Tottenham' && lowerQuery.includes('spurs'))
+    );
+    
+    // Determine metric type
+    let metric = 'general_stats';
+    if (lowerQuery.includes('goals') || lowerQuery.includes('goal') || lowerQuery.includes('scored') || lowerQuery.includes('conceded')) {
+      metric = 'goals_average';
+    } else if (lowerQuery.includes('win rate') || lowerQuery.includes('wins')) {
+      metric = 'win_rate';
+    } else if (lowerQuery.includes('roi') || lowerQuery.includes('return')) {
+      metric = 'roi';
+    } else if (lowerQuery.includes('over') || lowerQuery.includes('under')) {
+      metric = 'over_under';
+    }
+    
+    // Determine venue
+    let venue = 'all';
+    if (lowerQuery.includes('home') && !lowerQuery.includes('away')) {
+      venue = 'home';
+    } else if (lowerQuery.includes('away') && !lowerQuery.includes('home')) {
+      venue = 'away';
+    }
+    
+    return {
+      team: foundTeam,
+      metric,
+      venue,
+      season: '2023-24', // This matches the static data season format
+      timeframe: 'last_season'
+    };
   }
 
   /**
