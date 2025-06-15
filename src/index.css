@@ -133,7 +133,7 @@
 @layer components {
   /* Code cell styling */
   .code-cell {
-    @apply bg-quant-bg-secondary border border-quant-border rounded-2xl p-4 shadow-code-cell;
+    @apply bg-quant-bg-secondary border border-quant-border rounded-xl px-6 py-3 shadow-code-cell;
     @apply hover:border-quant-border-light transition-all duration-200;
   }
 
@@ -157,19 +157,19 @@
 
   /* Console/log styling */
   .console-output {
-    @apply bg-quant-bg-tertiary border border-quant-border rounded-xl p-4;
+    @apply bg-quant-bg-tertiary border border-quant-border rounded-lg px-5 py-3;
     @apply font-mono text-sm text-quant-text-muted;
   }
 
   /* Error message styling */
   .error-message {
-    @apply bg-quant-error/10 border border-quant-error/30 rounded-xl p-4;
+    @apply bg-quant-error/10 border border-quant-error/30 rounded-lg px-5 py-3;
     @apply font-mono text-sm text-quant-error;
   }
 
   /* Success message styling */
   .success-message {
-    @apply bg-quant-success/10 border border-quant-success/30 rounded-xl p-4;
+    @apply bg-quant-success/10 border border-quant-success/30 rounded-lg px-5 py-3;
     @apply font-mono text-sm text-quant-success;
   }
 
@@ -200,7 +200,7 @@
 
   /* Monaco Editor Overrides */
   .monaco-editor {
-    @apply rounded-xl;
+    @apply rounded-lg;
   }
 
   .monaco-editor .margin {
