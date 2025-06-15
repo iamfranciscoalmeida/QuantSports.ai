@@ -31,5 +31,22 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-alter publication supabase_realtime add table published_notebooks;
-alter publication supabase_realtime add table users;
+-- Add tables to realtime publication if not already added
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND tablename = 'published_notebooks'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE published_notebooks;
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND tablename = 'users'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE users;
+    END IF;
+END $$;

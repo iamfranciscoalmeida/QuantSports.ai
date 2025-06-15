@@ -37,6 +37,7 @@ import { NotebookCell } from "./NotebookCell";
 import { StrategyCreator } from "./StrategyCreator";
 import { StrategySummary } from "./StrategySummary";
 import { AIPromptBar } from "./AIPromptBar";
+import { BettingChatInterface } from "../chat/BettingChatInterface";
 import {
   NotebookCell as CellType,
   Notebook as NotebookType,
@@ -328,6 +329,8 @@ export function Notebook({ className }: NotebookProps) {
   const handleAIChat = useCallback(async () => {
     if (!aiInput.trim()) return;
 
+    console.log("🚀 Enhanced AI Chat - Starting with input:", aiInput);
+
     const userMessage: AIMessage = {
       id: `msg-${Date.now()}`,
       role: "user",
@@ -336,33 +339,167 @@ export function Notebook({ className }: NotebookProps) {
     };
 
     setAiMessages((prev) => [...prev, userMessage]);
+    const currentInput = aiInput;
     setAiInput("");
 
     try {
-      const response = await NotebookService.getAICompletion({
-        prompt: aiInput,
-        context: notebook.cells.map((c) => c.content),
-        cellId: "chat",
+      // Use the Fixed AI Orchestrator (handles database errors gracefully)
+      const { FixedAIOrchestrator } = await import('@/services/ai/orchestrator-fixed');
+      const orchestrator = new FixedAIOrchestrator();
+
+      console.log("🚀 Enhanced AI Chat - Using Enhanced Orchestrator");
+
+      // Create streaming message placeholder
+      const streamingMessageId = `msg-${Date.now()}-ai`;
+      const streamingMessage: AIMessage = {
+        id: streamingMessageId,
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+        isStreaming: true,
+      };
+
+      setAiMessages((prev) => [...prev, streamingMessage]);
+
+      const response = await orchestrator.processRequest({
+        query: currentInput,
+        userId: `notebook-user-${notebook.id}`,
+        notebookId: notebook.id,
+        streaming: true,
+        context: {
+          notebook_cells: notebook.cells.map(cell => ({
+            type: cell.type,
+            content: cell.content,
+            output: cell.output
+          })),
+          strategy_metadata: strategyMetadata,
+          cell_count: notebook.cells.length,
+          last_updated: notebook.updatedAt.toISOString(),
+          user_preferences: {
+            language: 'python',
+            framework: 'pandas',
+            sport: strategyMetadata.sport
+          }
+        }
       });
 
-      const assistantMessage: AIMessage = {
-        id: `msg-${Date.now()}-ai`,
-        role: "assistant",
-        content: response.explanation || "I've generated some code for you.",
-        timestamp: new Date(),
-      };
+      let fullContent = "";
+      let generatedCode = "";
 
-      setAiMessages((prev) => [...prev, assistantMessage]);
+      if (response && typeof response === 'object' && Symbol.asyncIterator in response) {
+        // Handle streaming response
+        console.log("🚀 Enhanced AI Chat - Processing streaming response");
+        
+        for await (const chunk of response as AsyncIterable<string>) {
+          fullContent += chunk;
+          
+          // Update streaming message
+          setAiMessages((prev) => 
+            prev.map(msg => 
+              msg.id === streamingMessageId 
+                ? { ...msg, content: fullContent }
+                : msg
+            )
+          );
+
+          // Small delay for smooth streaming effect
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
+
+        // Mark streaming as complete
+        setAiMessages((prev) => 
+          prev.map(msg => 
+            msg.id === streamingMessageId 
+              ? { ...msg, isStreaming: false }
+              : msg
+          )
+        );
+
+      } else {
+        // Handle direct response
+        const aiResponse = response as any;
+        fullContent = aiResponse.text || aiResponse.content || "I've processed your request.";
+        
+        setAiMessages((prev) => 
+          prev.map(msg => 
+            msg.id === streamingMessageId 
+              ? { ...msg, content: fullContent, isStreaming: false }
+              : msg
+          )
+        );
+      }
+
+      // Extract code blocks from the response
+      const codeMatches = fullContent.match(/```(?:python)?\n([\s\S]*?)\n```/g);
+      if (codeMatches && codeMatches.length > 0) {
+        // Get the largest code block (most comprehensive)
+        const codeBlocks = codeMatches.map(match => 
+          match.replace(/```(?:python)?\n/, '').replace(/\n```/, '')
+        );
+        generatedCode = codeBlocks.reduce((longest, current) => 
+          current.length > longest.length ? current : longest, ''
+        );
+
+        // Add code to notebook if it's substantial and not just examples
+        if (generatedCode.length > 50 && 
+            !generatedCode.includes('# Add your implementation here') &&
+            !generatedCode.includes('# Example usage') &&
+            generatedCode.includes('\n')) {
+          
+          const newCell = {
+            id: `cell-${Date.now()}`,
+            type: 'code' as const,
+            content: generatedCode,
+            output: '',
+            isExecuting: false,
+            executionCount: null
+          };
+          
+          setNotebook(prev => ({
+            ...prev,
+            cells: [...prev.cells, newCell],
+            updatedAt: new Date()
+          }));
+
+          console.log("🚀 Enhanced AI Chat - Added generated code to new cell");
+        }
+      }
+
+      console.log("🚀 Enhanced AI Chat - Response completed successfully");
+      
     } catch (error) {
-      const errorMessage: AIMessage = {
-        id: `msg-${Date.now()}-error`,
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
-        timestamp: new Date(),
-      };
-      setAiMessages((prev) => [...prev, errorMessage]);
+      console.error("🚀 Enhanced AI Chat - Error:", error);
+      
+      // Update the streaming message with error
+      setAiMessages((prev) => 
+        prev.map(msg => 
+          msg.role === "assistant" && msg.isStreaming
+            ? { 
+                ...msg, 
+                content: `❌ **Enhanced AI Temporarily Unavailable**
+
+I encountered an issue with the enhanced AI system. This could be due to:
+- API rate limits or quota exceeded
+- Network connectivity issues  
+- Temporary service disruption
+
+**What I can still help with:**
+- Code suggestions and examples
+- Strategy analysis guidance
+- General betting concepts
+- Data analysis patterns
+
+Please try your request again in a moment, or rephrase it for a simpler response.
+
+*The enhanced AI system provides multi-provider fallbacks, streaming responses, and advanced analysis capabilities.*`,
+                isStreaming: false,
+                hasError: true
+              }
+            : msg
+        )
+      );
     }
-  }, [aiInput, notebook.cells]);
+  }, [aiInput, notebook.cells, strategyMetadata]);
 
   const handleRunBacktest = useCallback(
     async (cellId: string) => {
@@ -674,10 +811,15 @@ export function Notebook({ className }: NotebookProps) {
         </div>
       </div>
 
-      {/* IDE Main Content */}
-      <div className="ide-main">
-        {/* Left Sidebar */}
-        <div className="ide-sidebar">
+      {/* IDE Main Content - Flex container for main content + AI sidebar */}
+      <div className="flex flex-1 min-h-0 transition-all duration-300">
+        {/* Main IDE Content */}
+        <div className={cn(
+          "ide-main flex-1 transition-all duration-300",
+          showAISidebar && "ide-main-with-ai-sidebar"
+        )}>
+          {/* Left Sidebar */}
+          <div className="ide-sidebar">
           <div className="p-4 border-b border-quant-border">
             <div className="flex items-center space-x-2 mb-4">
               <Button
@@ -698,6 +840,15 @@ export function Notebook({ className }: NotebookProps) {
                 <TrendingUp className="h-4 w-4 mr-2" />
                 Strategy
               </Button>
+              {/* <Button
+                variant={activeTab === "analyst" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveTab("analyst")}
+                className="flex-1"
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                AI Analyst
+              </Button> */}
             </div>
           </div>
 
@@ -705,7 +856,7 @@ export function Notebook({ className }: NotebookProps) {
             <div className="flex-1 overflow-auto">
               {/* File Explorer */}
               <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items ht-center justify-between mb-3">
                   <h3 className="text-sm font-medium text-quant-text">
                     EXPLORER
                   </h3>
@@ -794,6 +945,12 @@ export function Notebook({ className }: NotebookProps) {
             </div>
           )}
 
+          {activeTab === "analyst" && (
+            <div className="flex-1 overflow-auto">
+              <BettingChatInterface onCodeGenerated={handleAICodeGenerated} />
+            </div>
+          )}
+
           {activeTab === "strategy" && (
             <div className="flex-1 overflow-auto p-4">
               <h3 className="text-sm font-medium text-quant-text mb-3">
@@ -875,11 +1032,17 @@ export function Notebook({ className }: NotebookProps) {
         </div>
 
         {/* Main Content Area */}
-        <div className="ide-content">
+        <div className={cn(
+          "ide-content",
+          showAISidebar && "max-w-full"
+        )}>
           {/* Content based on active tab */}
           <div className="flex-1 overflow-auto">
             {activeCodeTab === "notebook-1" ? (
-              <div className="w-full px-6 py-8">
+              <div className={cn(
+                "w-full px-6 py-8",
+                showAISidebar && "max-w-full overflow-x-auto"
+              )}>
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-4">
                     <h1 className="text-xl font-semibold text-quant-text font-sans">
@@ -950,7 +1113,10 @@ export function Notebook({ className }: NotebookProps) {
                   </div>
                 )}
 
-                <div className="space-y-6">
+                <div className={cn(
+                  "space-y-6",
+                  showAISidebar && "max-w-full"
+                )}>
                   {notebook.cells.map((cell, index) => (
                     <NotebookCell
                       key={cell.id}
@@ -1034,15 +1200,17 @@ export function Notebook({ className }: NotebookProps) {
             </div>
           </div>
         </div>
+        </div>
 
         {/* AI Assistant Sidebar */}
         {showAISidebar && (
-          <div className="w-80 bg-quant-bg-secondary border-l border-quant-border flex flex-col h-full">
-            <div className="p-4 border-b border-quant-border flex items-center justify-between flex-shrink-0">
-              <div className="flex items-center space-x-2">
-                <Brain className="h-5 w-5 text-quant-accent" />
-                <h3 className="font-medium text-quant-text">AI Assistant</h3>
-              </div>
+              <div className="w-80 bg-quant-bg-secondary border-l-2 border-quant-accent flex flex-col h-full shadow-xl transition-all duration-300">
+              <div className="p-4 border-b-2 border-quant-accent/20 flex items-center justify-between flex-shrink-0 bg-quant-accent/5">
+                <div className="flex items-center space-x-2">
+                  <Brain className="h-5 w-5 text-quant-accent animate-pulse" />
+                  <h3 className="font-semibold text-quant-text">AI Assistant</h3>
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                </div>
               <Button
                 variant="ghost"
                 size="sm"

@@ -5,6 +5,7 @@ import { Dashboard } from "./components/dashboard/Dashboard";
 import { Notebook } from "./components/notebook/Notebook";
 import { GalleryListing } from "./components/gallery/GalleryListing";
 import { StrategyDetail } from "./components/gallery/StrategyDetail";
+import { AIIntegrationDemo } from "./components/demo/AIIntegrationDemo";
 import { useAuth } from "./hooks/useAuth";
 import { Toaster } from "./components/ui/toaster";
 import { ThemeProvider } from "./components/ui/theme-provider";
@@ -44,6 +45,7 @@ function App() {
               element={user ? <Dashboard /> : <Home />}
             />
             <Route path="/notebook" element={user ? <Notebook /> : <Home />} />
+            <Route path="/ai-demo" element={<AIIntegrationDemo />} />
             <Route path="/gallery" element={<GalleryListing />} />
             <Route path="/gallery/:slug" element={<StrategyDetail />} />
           </Routes>

@@ -270,4 +270,35 @@
   .terminal-content {
     @apply p-4 font-mono text-sm text-quant-text bg-quant-bg-tertiary overflow-auto;
   }
+
+  /* AI Sidebar Layout Adjustments */
+  .ide-main-with-ai-sidebar {
+    max-width: calc(100vw - 320px); /* Reserve 320px for AI sidebar */
+  }
+
+  .ide-main-with-ai-sidebar .ide-content {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .ide-main-with-ai-sidebar .code-cell {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .ide-main-with-ai-sidebar .monaco-editor {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Ensure code editors and content areas properly wrap */
+  .ide-main-with-ai-sidebar .monaco-editor-container {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .ide-main-with-ai-sidebar textarea {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }

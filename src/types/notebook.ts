@@ -74,6 +74,8 @@ export interface AIMessage {
   content: string;
   timestamp: Date;
   cellId?: string;
+  isStreaming?: boolean;
+  hasError?: boolean;
 }
 
 export interface TerminalTab {

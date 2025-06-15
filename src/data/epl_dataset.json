@@ -1,0 +1,272 @@
+[
+  {
+    "match_id": 10001,
+    "date": "2023-08-12",
+    "league": "Premier League",
+    "season": "2023-24",
+    "home_team": "Arsenal",
+    "away_team": "Nottingham Forest",
+    "home_score": 2,
+    "away_score": 1,
+    "market_odds": {
+      "1": 1.35,
+      "X": 5.2,
+      "2": 8.5,
+      "over_2.5": 1.75,
+      "under_2.5": 2.1
+    },
+    "closing_odds": {
+      "1": 1.33,
+      "X": 5.4,
+      "2": 9.0,
+      "over_2.5": 1.73,
+      "under_2.5": 2.15
+    },
+    "xg": { "home": 2.1, "away": 0.8 },
+    "result": "H",
+    "total_goals": 3
+  },
+  {
+    "match_id": 10002,
+    "date": "2023-08-12",
+    "league": "Premier League",
+    "season": "2023-24",
+    "home_team": "Burnley",
+    "away_team": "Manchester City",
+    "home_score": 0,
+    "away_score": 3,
+    "market_odds": {
+      "1": 13.0,
+      "X": 6.5,
+      "2": 1.22,
+      "over_2.5": 1.40,
+      "under_2.5": 2.90
+    },
+    "closing_odds": {
+      "1": 14.0,
+      "X": 6.8,
+      "2": 1.20,
+      "over_2.5": 1.38,
+      "under_2.5": 3.00
+    },
+    "xg": { "home": 0.6, "away": 2.8 },
+    "result": "A",
+    "total_goals": 3
+  },
+  {
+    "match_id": 10003,
+    "date": "2023-08-13",
+    "league": "Premier League",
+    "season": "2023-24",
+    "home_team": "Chelsea",
+    "away_team": "Liverpool",
+    "home_score": 1,
+    "away_score": 1,
+    "market_odds": {
+      "1": 2.8,
+      "X": 3.4,
+      "2": 2.5,
+      "over_2.5": 1.85,
+      "under_2.5": 1.95
+    },
+    "closing_odds": {
+      "1": 2.9,
+      "X": 3.3,
+      "2": 2.45,
+      "over_2.5": 1.88,
+      "under_2.5": 1.92
+    },
+    "xg": { "home": 1.4, "away": 1.6 },
+    "result": "D",
+    "total_goals": 2
+  },
+  {
+    "match_id": 10004,
+    "date": "2023-08-19",
+    "league": "Premier League",
+    "season": "2023-24",
+    "home_team": "Manchester United",
+    "away_team": "Tottenham",
+    "home_score": 2,
+    "away_score": 0,
+    "market_odds": {
+      "1": 1.95,
+      "X": 3.6,
+      "2": 3.8,
+      "over_2.5": 1.90,
+      "under_2.5": 1.90
+    },
+    "closing_odds": {
+      "1": 1.92,
+      "X": 3.7,
+      "2": 3.9,
+      "over_2.5": 1.85,
+      "under_2.5": 1.95
+    },
+    "xg": { "home": 1.8, "away": 1.1 },
+    "result": "H",
+    "total_goals": 2
+  },
+  {
+    "match_id": 10005,
+    "date": "2023-08-20",
+    "league": "Premier League",
+    "season": "2023-24",
+    "home_team": "Brighton",
+    "away_team": "West Ham",
+    "home_score": 4,
+    "away_score": 1,
+    "market_odds": {
+      "1": 2.1,
+      "X": 3.5,
+      "2": 3.2,
+      "over_2.5": 1.70,
+      "under_2.5": 2.20
+    },
+    "closing_odds": {
+      "1": 2.05,
+      "X": 3.6,
+      "2": 3.3,
+      "over_2.5": 1.68,
+      "under_2.5": 2.25
+    },
+    "xg": { "home": 2.5, "away": 1.3 },
+    "result": "H",
+    "total_goals": 5
+  },
+  {
+    "match_id": 10006,
+    "date": "2023-08-26",
+    "league": "Premier League",
+    "season": "2023-24",
+    "home_team": "Manchester City",
+    "away_team": "Nottingham Forest",
+    "home_score": 2,
+    "away_score": 0,
+    "market_odds": {
+      "1": 1.15,
+      "X": 8.0,
+      "2": 15.0,
+      "over_2.5": 1.50,
+      "under_2.5": 2.60
+    },
+    "closing_odds": {
+      "1": 1.12,
+      "X": 8.5,
+      "2": 16.0,
+      "over_2.5": 1.45,
+      "under_2.5": 2.75
+    },
+    "xg": { "home": 2.8, "away": 0.4 },
+    "result": "H",
+    "total_goals": 2
+  },
+  {
+    "match_id": 10007,
+    "date": "2023-08-27",
+    "league": "Premier League", 
+    "season": "2023-24",
+    "home_team": "Liverpool",
+    "away_team": "Bournemouth",
+    "home_score": 3,
+    "away_score": 1,
+    "market_odds": {
+      "1": 1.30,
+      "X": 5.5,
+      "2": 9.0,
+      "over_2.5": 1.65,
+      "under_2.5": 2.25
+    },
+    "closing_odds": {
+      "1": 1.28,
+      "X": 5.8,
+      "2": 9.5,
+      "over_2.5": 1.62,
+      "under_2.5": 2.30
+    },
+    "xg": { "home": 2.1, "away": 1.1 },
+    "result": "H",
+    "total_goals": 4
+  },
+  {
+    "match_id": 10008,
+    "date": "2023-09-02",
+    "league": "Premier League",
+    "season": "2023-24", 
+    "home_team": "Arsenal",
+    "away_team": "Manchester United",
+    "home_score": 3,
+    "away_score": 1,
+    "market_odds": {
+      "1": 1.75,
+      "X": 3.8,
+      "2": 4.5,
+      "over_2.5": 1.80,
+      "under_2.5": 2.00
+    },
+    "closing_odds": {
+      "1": 1.70,
+      "X": 4.0,
+      "2": 4.8,
+      "over_2.5": 1.75,
+      "under_2.5": 2.10
+    },
+    "xg": { "home": 2.3, "away": 1.5 },
+    "result": "H",
+    "total_goals": 4
+  },
+  {
+    "match_id": 10009,
+    "date": "2023-09-03",
+    "league": "Premier League",
+    "season": "2023-24",
+    "home_team": "Tottenham",
+    "away_team": "Burnley",
+    "home_score": 5,
+    "away_score": 2,
+    "market_odds": {
+      "1": 1.25,
+      "X": 6.0,
+      "2": 11.0,
+      "over_2.5": 1.55,
+      "under_2.5": 2.45
+    },
+    "closing_odds": {
+      "1": 1.22,
+      "X": 6.5,
+      "2": 12.0,
+      "over_2.5": 1.50,
+      "under_2.5": 2.55
+    },
+    "xg": { "home": 3.2, "away": 1.8 },
+    "result": "H",
+    "total_goals": 7
+  },
+  {
+    "match_id": 10010,
+    "date": "2023-09-16",
+    "league": "Premier League",
+    "season": "2023-24",
+    "home_team": "Sheffield United",
+    "away_team": "Newcastle",
+    "home_score": 0,
+    "away_score": 8,
+    "market_odds": {
+      "1": 7.5,
+      "X": 4.5,
+      "2": 1.40,
+      "over_2.5": 1.45,
+      "under_2.5": 2.75
+    },
+    "closing_odds": {
+      "1": 8.0,
+      "X": 4.8,
+      "2": 1.35,
+      "over_2.5": 1.40,
+      "under_2.5": 2.90
+    },
+    "xg": { "home": 0.3, "away": 4.1 },
+    "result": "A",
+    "total_goals": 8
+  }
+] 
