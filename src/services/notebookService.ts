@@ -5,6 +5,11 @@ import {
   CodeExecutionResult,
   SportsBettingContext,
   BettingFunction,
+  BacktestRequest,
+  BacktestResult,
+  BacktestSummary,
+  BetLogEntry,
+  PnLPoint,
 } from "@/types/notebook";
 
 // Mock Python execution service (replace with actual backend)
@@ -325,5 +330,140 @@ print(f"Context cells: {len(context)}")
         market_efficiency: 0.92,
       },
     };
+  }
+
+  static async runBacktest(request: BacktestRequest): Promise<BacktestResult> {
+    // Simulate backtest execution delay
+    await new Promise((resolve) =>
+      setTimeout(resolve, 3000 + Math.random() * 2000),
+    );
+
+    // Mock backtest results - in production this would call the Python backend
+    const mockBetLog: BetLogEntry[] = [
+      {
+        id: "bet-1",
+        event_id: "evt-1",
+        event_name: "Lakers vs Warriors",
+        market: "Moneyline",
+        selection: "Lakers",
+        odds: 2.1,
+        stake: 50,
+        outcome: "win",
+        pnl: 55,
+        date: "2024-01-15",
+        league: "NBA",
+        sport: "Basketball",
+      },
+      {
+        id: "bet-2",
+        event_id: "evt-2",
+        event_name: "Celtics vs Heat",
+        market: "Spread",
+        selection: "Celtics -5.5",
+        odds: 1.9,
+        stake: 50,
+        outcome: "loss",
+        pnl: -50,
+        date: "2024-01-16",
+        league: "NBA",
+        sport: "Basketball",
+      },
+      {
+        id: "bet-3",
+        event_id: "evt-3",
+        event_name: "Nets vs 76ers",
+        market: "Total Points",
+        selection: "Over 215.5",
+        odds: 2.0,
+        stake: 50,
+        outcome: "win",
+        pnl: 50,
+        date: "2024-01-17",
+        league: "NBA",
+        sport: "Basketball",
+      },
+    ];
+
+    const mockPnLCurve: PnLPoint[] = [
+      { date: "2024-01-15", cumulative_pnl: 55, bankroll: 1055, drawdown: 0 },
+      { date: "2024-01-16", cumulative_pnl: 5, bankroll: 1005, drawdown: -4.7 },
+      { date: "2024-01-17", cumulative_pnl: 55, bankroll: 1055, drawdown: 0 },
+    ];
+
+    const summary: BacktestSummary = {
+      roi: 5.5,
+      net_pnl: 55,
+      win_rate: 66.7,
+      max_drawdown: 4.7,
+      sharpe_ratio: 1.2,
+      total_bets: 3,
+      winning_bets: 2,
+      losing_bets: 1,
+      avg_odds: 2.0,
+      profit_factor: 2.1,
+    };
+
+    return {
+      summary,
+      bet_log: mockBetLog,
+      pnl_curve: mockPnLCurve,
+      charts: {
+        pnl_chart: "mock_chart_data",
+        drawdown_chart: "mock_chart_data",
+        roi_chart: "mock_chart_data",
+      },
+      execution_time: 4.2,
+      total_events: 150,
+    };
+  }
+
+  static generateSampleStrategy(): string {
+    return `class MyBettingStrategy:
+    def __init__(self):
+        self.bankroll = 1000
+        self.min_odds = 1.5
+        self.max_odds = 3.0
+        self.stake_percentage = 0.05
+    
+    def initialize(self):
+        """Initialize strategy parameters"""
+        print("Strategy initialized with bankroll:", self.bankroll)
+    
+    def on_event(self, event, odds):
+        """Main strategy logic - returns list of bets"""
+        bets = []
+        
+        # Simple value betting strategy
+        for market, market_odds in odds.items():
+            for selection, odd_value in market_odds.items():
+                # Calculate implied probability
+                implied_prob = 1 / odd_value
+                
+                # Our estimated probability (mock)
+                estimated_prob = self.estimate_probability(event, selection)
+                
+                # Check for value bet
+                if estimated_prob > implied_prob and self.min_odds <= odd_value <= self.max_odds:
+                    stake = self.bankroll * self.stake_percentage
+                    
+                    bets.append({
+                        "market": market,
+                        "selection": selection,
+                        "odds": odd_value,
+                        "stake": stake,
+                        "confidence": estimated_prob - implied_prob
+                    })
+        
+        return bets
+    
+    def estimate_probability(self, event, selection):
+        """Estimate true probability - replace with your model"""
+        # Mock probability estimation
+        import random
+        return random.uniform(0.3, 0.7)
+    
+    def update_bankroll(self, pnl):
+        """Update bankroll after bet settlement"""
+        self.bankroll += pnl`;
   }
 }

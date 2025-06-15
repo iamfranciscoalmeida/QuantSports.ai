@@ -26,6 +26,8 @@ import {
   ChevronRight,
   ChevronDown,
   X,
+  Target,
+  DollarSign,
 } from "lucide-react";
 import { NotebookCell } from "./NotebookCell";
 import {
@@ -313,6 +315,86 @@ export function Notebook({ className }: NotebookProps) {
       setAiMessages((prev) => [...prev, errorMessage]);
     }
   }, [aiInput, notebook.cells]);
+
+  const handleRunBacktest = useCallback(
+    async (cellId: string) => {
+      setNotebook((prev) => ({
+        ...prev,
+        cells: prev.cells.map((cell) =>
+          cell.id === cellId
+            ? { ...cell, isBacktesting: true, backtestResult: undefined }
+            : cell,
+        ),
+      }));
+
+      try {
+        const cell = notebook.cells.find((c) => c.id === cellId);
+        if (!cell) return;
+
+        const backtestRequest = {
+          code: cell.content,
+          settings: {
+            initial_bankroll: 1000,
+            commission: 0.02,
+            stake_model: "flat" as const,
+            start_date: "2024-01-01",
+            end_date: "2024-03-01",
+          },
+        };
+
+        const result = await NotebookService.runBacktest(backtestRequest);
+
+        setNotebook((prev) => ({
+          ...prev,
+          cells: prev.cells.map((cell) =>
+            cell.id === cellId
+              ? {
+                  ...cell,
+                  isBacktesting: false,
+                  backtestResult: result,
+                }
+              : cell,
+          ),
+          updatedAt: new Date(),
+        }));
+
+        // Add to terminal logs
+        const logMessage = `✅ Backtest completed: ROI ${result.summary.roi.toFixed(1)}%, Win Rate ${result.summary.win_rate.toFixed(1)}%`;
+        setTerminalTabs((prev) =>
+          prev.map((tab) =>
+            tab.id === "backtest"
+              ? { ...tab, content: [...tab.content, logMessage] }
+              : tab,
+          ),
+        );
+
+        toast({
+          title: "Backtest Completed",
+          description: `ROI: ${result.summary.roi.toFixed(1)}% | Win Rate: ${result.summary.win_rate.toFixed(1)}%`,
+        });
+      } catch (error) {
+        setNotebook((prev) => ({
+          ...prev,
+          cells: prev.cells.map((cell) =>
+            cell.id === cellId
+              ? {
+                  ...cell,
+                  isBacktesting: false,
+                  error: "Failed to run backtest",
+                }
+              : cell,
+          ),
+        }));
+
+        toast({
+          title: "Backtest Failed",
+          description: "An error occurred while running the backtest",
+          variant: "destructive",
+        });
+      }
+    },
+    [notebook.cells, toast],
+  );
 
   const getContextCells = useCallback(
     (cellId: string) => {
@@ -613,6 +695,30 @@ export function Notebook({ className }: NotebookProps) {
                     Add Cell
                   </Button>
 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const strategyCode =
+                        NotebookService.generateSampleStrategy();
+                      const newCell = {
+                        id: `cell-${Date.now()}`,
+                        type: "code" as const,
+                        content: strategyCode,
+                        executionCount: 0,
+                      };
+                      setNotebook((prev) => ({
+                        ...prev,
+                        cells: [...prev.cells, newCell],
+                        updatedAt: new Date(),
+                      }));
+                    }}
+                    className="text-quant-warning border-quant-warning/30 hover:bg-quant-warning/10"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Add Strategy Template
+                  </Button>
+
                   <Button variant="outline" size="sm">
                     <Save className="h-4 w-4 mr-2" />
                     Save
@@ -629,6 +735,7 @@ export function Notebook({ className }: NotebookProps) {
                     onDelete={deleteCell}
                     onRunCell={runCell}
                     onAIAssist={handleAIAssist}
+                    onRunBacktest={handleRunBacktest}
                     isLast={index === notebook.cells.length - 1}
                     contextCells={getContextCells(cell.id)}
                   />

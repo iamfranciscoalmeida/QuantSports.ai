@@ -6,6 +6,8 @@ export interface NotebookCell {
   error?: string;
   isRunning?: boolean;
   executionCount?: number;
+  backtestResult?: BacktestResult;
+  isBacktesting?: boolean;
 }
 
 export interface Notebook {
@@ -79,4 +81,79 @@ export interface TerminalTab {
   name: string;
   content: string[];
   active: boolean;
+}
+
+export interface BacktestRequest {
+  code: string;
+  settings: BacktestSettings;
+}
+
+export interface BacktestSettings {
+  initial_bankroll: number;
+  commission: number;
+  stake_model: "flat" | "percentage" | "kelly";
+  start_date: string;
+  end_date: string;
+  max_stake?: number;
+  min_stake?: number;
+}
+
+export interface BacktestResult {
+  summary: BacktestSummary;
+  bet_log: BetLogEntry[];
+  pnl_curve: PnLPoint[];
+  charts: BacktestCharts;
+  execution_time: number;
+  total_events: number;
+}
+
+export interface BacktestSummary {
+  roi: number;
+  net_pnl: number;
+  win_rate: number;
+  max_drawdown: number;
+  sharpe_ratio: number;
+  total_bets: number;
+  winning_bets: number;
+  losing_bets: number;
+  avg_odds: number;
+  profit_factor: number;
+}
+
+export interface BetLogEntry {
+  id: string;
+  event_id: string;
+  event_name: string;
+  market: string;
+  selection: string;
+  odds: number;
+  stake: number;
+  outcome: "win" | "loss" | "void";
+  pnl: number;
+  date: string;
+  league: string;
+  sport: string;
+}
+
+export interface PnLPoint {
+  date: string;
+  cumulative_pnl: number;
+  bankroll: number;
+  drawdown: number;
+}
+
+export interface BacktestCharts {
+  pnl_chart: string; // base64 encoded chart or JSON data
+  drawdown_chart: string;
+  roi_chart: string;
+}
+
+export interface BacktestExecution {
+  id: string;
+  status: "running" | "completed" | "failed";
+  progress: number;
+  start_time: Date;
+  end_time?: Date;
+  result?: BacktestResult;
+  error?: string;
 }

@@ -25,6 +25,12 @@ import {
   RefreshCw,
   TrendingUp,
   AlertCircle,
+  BarChart3,
+  Target,
+  DollarSign,
+  Percent,
+  Calendar,
+  Settings,
 } from "lucide-react";
 import { NotebookCell as CellType } from "@/types/notebook";
 import { NotebookService } from "@/services/notebookService";
@@ -36,6 +42,7 @@ interface NotebookCellProps {
   onDelete: (cellId: string) => void;
   onRunCell: (cellId: string) => void;
   onAIAssist: (cellId: string, prompt: string) => void;
+  onRunBacktest?: (cellId: string) => void;
   isLast?: boolean;
   contextCells: string[];
 }
@@ -46,6 +53,7 @@ export function NotebookCell({
   onDelete,
   onRunCell,
   onAIAssist,
+  onRunBacktest,
   isLast = false,
   contextCells,
 }: NotebookCellProps) {
@@ -201,6 +209,14 @@ export function NotebookCell({
                 <span className="text-xs text-quant-accent">Running...</span>
               </div>
             )}
+            {cell.isBacktesting && (
+              <div className="flex items-center space-x-1">
+                <BarChart3 className="h-3 w-3 animate-pulse text-quant-warning" />
+                <span className="text-xs text-quant-warning">
+                  Backtesting...
+                </span>
+              </div>
+            )}
           </div>
 
           <div
@@ -231,6 +247,25 @@ export function NotebookCell({
             >
               <Brain className="h-4 w-4" />
             </Button>
+
+            {onRunBacktest &&
+              cell.content.includes("class") &&
+              cell.content.includes("on_event") && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onRunBacktest(cell.id)}
+                  disabled={cell.isBacktesting}
+                  className="h-8 px-3 text-quant-warning hover:text-quant-warning hover:bg-quant-warning/10 rounded-lg"
+                  title="Run Backtest"
+                >
+                  {cell.isBacktesting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <BarChart3 className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -393,7 +428,7 @@ export function NotebookCell({
         </div>
 
         {/* Output */}
-        {(cell.output || cell.error) && (
+        {(cell.output || cell.error || cell.backtestResult) && (
           <div className="border-t border-quant-border">
             {cell.output && (
               <div className="console-output p-4 bg-quant-bg-tertiary">
@@ -419,6 +454,173 @@ export function NotebookCell({
                 <pre className="text-sm font-mono text-quant-error whitespace-pre-wrap leading-relaxed">
                   {cell.error}
                 </pre>
+              </div>
+            )}
+            {cell.backtestResult && (
+              <div className="backtest-results p-6 bg-quant-bg-tertiary">
+                <div className="flex items-center space-x-2 mb-4">
+                  <BarChart3 className="h-5 w-5 text-quant-accent" />
+                  <span className="text-sm font-medium text-quant-accent">
+                    Backtest Results
+                  </span>
+                  <span className="text-xs text-quant-text-muted font-mono">
+                    ({cell.backtestResult.execution_time}s •{" "}
+                    {cell.backtestResult.total_events} events)
+                  </span>
+                </div>
+
+                {/* Summary Metrics */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-quant-bg-secondary p-3 rounded-lg border border-quant-border">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <TrendingUp className="h-4 w-4 text-quant-success" />
+                      <span className="text-xs text-quant-text-muted">ROI</span>
+                    </div>
+                    <div
+                      className={cn(
+                        "text-lg font-bold font-mono",
+                        cell.backtestResult.summary.roi >= 0
+                          ? "text-quant-success"
+                          : "text-quant-error",
+                      )}
+                    >
+                      {cell.backtestResult.summary.roi > 0 ? "+" : ""}
+                      {cell.backtestResult.summary.roi.toFixed(1)}%
+                    </div>
+                  </div>
+
+                  <div className="bg-quant-bg-secondary p-3 rounded-lg border border-quant-border">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <DollarSign className="h-4 w-4 text-quant-accent" />
+                      <span className="text-xs text-quant-text-muted">
+                        Net P&L
+                      </span>
+                    </div>
+                    <div
+                      className={cn(
+                        "text-lg font-bold font-mono",
+                        cell.backtestResult.summary.net_pnl >= 0
+                          ? "text-quant-success"
+                          : "text-quant-error",
+                      )}
+                    >
+                      ${cell.backtestResult.summary.net_pnl.toFixed(0)}
+                    </div>
+                  </div>
+
+                  <div className="bg-quant-bg-secondary p-3 rounded-lg border border-quant-border">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <Target className="h-4 w-4 text-quant-accent" />
+                      <span className="text-xs text-quant-text-muted">
+                        Win Rate
+                      </span>
+                    </div>
+                    <div className="text-lg font-bold font-mono text-quant-text">
+                      {cell.backtestResult.summary.win_rate.toFixed(1)}%
+                    </div>
+                  </div>
+
+                  <div className="bg-quant-bg-secondary p-3 rounded-lg border border-quant-border">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <AlertCircle className="h-4 w-4 text-quant-error" />
+                      <span className="text-xs text-quant-text-muted">
+                        Max DD
+                      </span>
+                    </div>
+                    <div className="text-lg font-bold font-mono text-quant-error">
+                      -{cell.backtestResult.summary.max_drawdown.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Metrics */}
+                <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
+                  <div className="text-center">
+                    <div className="text-quant-text-muted">Total Bets</div>
+                    <div className="font-mono text-quant-text">
+                      {cell.backtestResult.summary.total_bets}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-quant-text-muted">Avg Odds</div>
+                    <div className="font-mono text-quant-text">
+                      {cell.backtestResult.summary.avg_odds.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-quant-text-muted">Sharpe Ratio</div>
+                    <div className="font-mono text-quant-text">
+                      {cell.backtestResult.summary.sharpe_ratio.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bet Log Preview */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium text-quant-text mb-3">
+                    Recent Bets
+                  </h4>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {cell.backtestResult.bet_log.slice(0, 5).map((bet) => (
+                      <div
+                        key={bet.id}
+                        className="flex items-center justify-between p-2 bg-quant-bg-secondary rounded border border-quant-border text-xs"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="text-quant-text-muted">
+                            {bet.date}
+                          </span>
+                          <span className="text-quant-text">
+                            {bet.event_name}
+                          </span>
+                          <span className="text-quant-accent">
+                            {bet.selection}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <span className="font-mono text-quant-text">
+                            {bet.odds.toFixed(2)}
+                          </span>
+                          <span className="font-mono text-quant-text">
+                            ${bet.stake}
+                          </span>
+                          <span
+                            className={cn(
+                              "font-mono font-medium",
+                              bet.outcome === "win"
+                                ? "text-quant-success"
+                                : "text-quant-error",
+                            )}
+                          >
+                            {bet.outcome === "win" ? "+" : ""}
+                            {bet.pnl.toFixed(0)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {cell.backtestResult.bet_log.length > 5 && (
+                    <div className="text-xs text-quant-text-muted mt-2 text-center">
+                      ... and {cell.backtestResult.bet_log.length - 5} more bets
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center space-x-2 pt-4 border-t border-quant-border">
+                  <Button size="sm" variant="outline" className="text-xs">
+                    <Copy className="h-3 w-3 mr-1" />
+                    Export CSV
+                  </Button>
+                  <Button size="sm" variant="outline" className="text-xs">
+                    <BarChart3 className="h-3 w-3 mr-1" />
+                    View Charts
+                  </Button>
+                  <Button size="sm" variant="outline" className="text-xs">
+                    <Settings className="h-3 w-3 mr-1" />
+                    Adjust Settings
+                  </Button>
+                </div>
               </div>
             )}
           </div>
